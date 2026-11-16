@@ -1,0 +1,11 @@
+# Configuracion extraida: contiene contrasenas en texto plano y datos del equipo
+config/
+
+# Registros de ejecucion
+logs/
+
+# Respaldos que crean los modulos al sobrescribir archivos
+*.ohp2.bak
+
+# Configuracion de Sandbox generada
+*.wsb
