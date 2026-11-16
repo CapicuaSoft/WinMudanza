@@ -1,5 +1,12 @@
 # Cambios
 
+## 2.1.0 — 2026-11-16
+
+### Nuevo
+- Módulo **Office**: extrae la instalación de Microsoft 365 / Office (producto, idioma, canal, apps excluidas) y la instala en silencio con la Office Deployment Tool oficial (`setup.exe` verificado por firma). La activación queda como pendiente manual.
+- Paquetes no instala `Microsoft.Office` con winget cuando el módulo Office se encarga de él.
+- El contexto de los módulos (`$Ctx`) incluye `Seleccion`: los módulos que se ejecutan.
+
 ## 2.0.0 — 2026-11-16
 
 Primera versión de OptimizarHP2, reescrita a partir de OptimizarHP (v1).

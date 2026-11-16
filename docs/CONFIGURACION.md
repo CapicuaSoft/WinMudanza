@@ -23,6 +23,7 @@ Hay ejemplos con datos ficticios en [`ejemplos/`](../ejemplos/).
         Usuarios    = @{ Extraer = $true;  Aplicar = $true }
         Compartidas = @{ Extraer = $true;  Aplicar = $true }
         Paquetes    = @{ Extraer = $true;  Aplicar = $true }
+        Office      = @{ Extraer = $true;  Aplicar = $true }
         UniGetUI    = @{ Extraer = $true;  Aplicar = $true }
         Steam       = @{ Extraer = $true;  Aplicar = $false }   # p. ej. no restaurar Steam
     }
@@ -127,6 +128,37 @@ PowerShell = @{ Activo = $true; Paquetes = @( ... ) }
 - Se instala siempre la última versión.
 
 `paquetes_no_reinstalables.txt` es solo informativo.
+
+---
+
+## `config\office.psd1`
+
+```powershell
+@{
+    Activo          = $true
+    Arquitectura    = '64'
+    Canal           = 'Current'
+    Idiomas         = @( 'es-mx' )
+    Productos       = @(
+        @{ Id = 'O365HomePremRetail'; Excluir = @( 'Access', 'Publisher', 'OneNote', 'OneDrive', 'Teams', 'Groove', 'Lync' ) }
+    )
+    Actualizaciones = $true
+    Silencioso      = $true
+}
+```
+
+| Campo | Descripción |
+|---|---|
+| `Activo` | `$false` = no instalar Office. |
+| `Arquitectura` | `'64'` o `'32'`. |
+| `Canal` | `Current`, `MonthlyEnterprise`, `SemiAnnual`, `CurrentPreview`, `BetaChannel`. |
+| `Idiomas` | Códigos de idioma (`es-mx`, `es-es`, `en-us`…) o `MatchOS` (el de Windows). |
+| `Productos` | Uno o varios productos. `Id`: `O365HomePremRetail` (Microsoft 365 Familia/Personal), `O365ProPlusRetail` (Apps para empresa), `ProPlus2024Retail`, `VisioProRetail`… |
+| `Productos.Excluir` | Aplicaciones que no se instalan: `Access`, `Excel`, `Groove`, `Lync`, `OneDrive`, `OneNote`, `Outlook`, `OutlookForWindows`, `PowerPoint`, `Publisher`, `Teams`, `Word`, `Bing`. |
+| `Actualizaciones` | `$true` = Office se actualiza solo. |
+| `Silencioso` | `$true` = sin ventanas; `$false` = muestra el progreso de instalación. |
+
+Equivale al `configuration.xml` de la Office Deployment Tool; el módulo lo genera al aplicar.
 
 ---
 

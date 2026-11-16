@@ -6,7 +6,7 @@
     OptimizarHP2 tiene dos acciones principales:
 
       Extraer  Lee la configuracion de ESTE equipo (usuarios, carpetas compartidas, paquetes,
-               UniGetUI, Steam) y la guarda en archivos .psd1 editables dentro de config\.
+               Office, UniGetUI, Steam) y la guarda en archivos .psd1 editables dentro de config\.
       Aplicar  Lee config\ y ajustes.psd1 y los aplica a ESTE equipo.
 
     Que modulos se ejecutan lo decide perfil.psd1; -Solo y -Omitir lo sobrescriben.
@@ -68,7 +68,7 @@ param(
 
 $ErrorActionPreference = 'Continue'
 $Raiz = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Version = '2.0.0'
+$Version = '2.1.0'
 
 Import-Module (Join-Path $Raiz 'lib\Comun.psm1') -Force -DisableNameChecking -Global
 Import-Module (Join-Path $Raiz 'lib\Psd1.psm1')  -Force -DisableNameChecking -Global
@@ -152,6 +152,7 @@ function Invoke-Accion([string]$Acc, [string[]]$Seleccion, [bool]$Simular) {
         Simular   = $Simular
         Accion    = $Acc
         Version   = $Version
+        Seleccion = $Seleccion
     }
 
     $aEjecutar = @($Modulos | Where-Object { $Seleccion -contains $_.Nombre })

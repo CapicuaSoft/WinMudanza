@@ -1,6 +1,6 @@
 # Módulos
 
-Orden de ejecución al aplicar: **Ajustes → Usuarios → Compartidas → Paquetes → UniGetUI → Steam**.
+Orden de ejecución al aplicar: **Ajustes → Usuarios → Compartidas → Paquetes → Office → UniGetUI → Steam**.
 
 Todos los módulos son **repetibles**: lo que ya está aplicado se salta, así que se pueden volver a ejecutar para completar pendientes.
 
@@ -79,6 +79,27 @@ Todos los módulos son **repetibles**: lo que ya está aplicado se salta, así q
 - Siempre instala la **última versión**.
 - Algunos paquetes de winget pueden fallar por hash o por necesitar interacción: se indica el código de error y se continúa.
 - En un Windows recién instalado winget puede tardar en estar disponible: abre Microsoft Store y actualiza *Instalador de aplicación*.
+
+---
+
+## Office
+
+**Extrae:** del registro de Office Click-to-Run (`HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration`): productos instalados, arquitectura (32/64 bits), canal de actualización, idioma y aplicaciones excluidas de cada producto. Si Office no está instalado, genera `office.psd1` con `Activo = $false` y valores por defecto.
+
+**Aplica:**
+1. Si todos los productos de `office.psd1` ya están instalados, no hace nada (no modifica una instalación existente).
+2. Descarga `setup.exe` de la Office Deployment Tool desde el CDN oficial de Microsoft (`officecdn.microsoft.com`) y comprueba que su firma digital es de Microsoft.
+3. Genera `configuration.xml` a partir de `office.psd1` e instala los productos que faltan con `setup.exe /configure`, en silencio si `Silencioso = $true`.
+4. Comprueba en el registro que quedaron instalados y borra los archivos temporales.
+
+**Relación con Paquetes:** si el módulo Office se ejecuta y su `office.psd1` está activo, Paquetes **no** instala `Microsoft.Office` con winget (lo haría con la configuración por defecto: todas las aplicaciones).
+
+**Pendiente manual:** activar Office. Microsoft 365 se activa iniciando sesión con la cuenta Microsoft (abre Word → *Iniciar sesión*).
+
+**Limitaciones:**
+- Necesita internet: descarga unos 3 GB y tarda entre 10 y 30 minutos.
+- No cambia una instalación existente (por ejemplo, no añade ni quita aplicaciones excluidas). Para eso, desinstala Office y vuelve a aplicar.
+- Las licencias por volumen (KMS/MAK) no se configuran.
 
 ---
 

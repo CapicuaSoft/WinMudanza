@@ -46,4 +46,5 @@ Ver `docs\DESARROLLO.md`. Resumen:
 - Paquetes: winget (solo fuente winget) + npm, pip, dotnet tool, módulos PowerShell.
 - Ajustes de usuario, UniGetUI: todos los perfiles + Default. Steam: cuentas detectadas; Steam y emuladores se instalan a mano.
 - Edge: si las directivas obligatorias no aplican sin dominio, usar `TipoDirectiva = 'Recomendada'`.
+- Office: módulo propio con la Office Deployment Tool, instalación silenciosa; activación manual. `C:\Proyectos\InstalarOffice` queda intacto como referencia.
 - Ejecución por menú y por parámetros; formato `.psd1`; git solo local.

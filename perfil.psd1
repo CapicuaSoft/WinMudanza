@@ -19,6 +19,7 @@
         Usuarios    = @{ Extraer = $true;  Aplicar = $true }   # usuarios locales y sus grupos
         Compartidas = @{ Extraer = $true;  Aplicar = $true }   # carpetas compartidas + permisos NTFS
         Paquetes    = @{ Extraer = $true;  Aplicar = $true }   # winget, npm, pip, dotnet tool, modulos PowerShell
+        Office      = @{ Extraer = $true;  Aplicar = $true }   # Microsoft 365 / Office con la Office Deployment Tool
         UniGetUI    = @{ Extraer = $true;  Aplicar = $true }   # configuracion de UniGetUI
         Steam       = @{ Extraer = $true;  Aplicar = $true }   # imagenes, juegos no-Steam, colecciones, opciones
     }

@@ -2,7 +2,7 @@
 
 Scripts de PowerShell para dejar a punto un **Windows 11 recién instalado** y **trasladar la configuración** de un equipo a otro.
 
-- **Extraer**: lee la configuración del equipo actual (usuarios, carpetas compartidas, programas, UniGetUI, Steam) y la guarda en archivos `.psd1` que puedes revisar y editar.
+- **Extraer**: lee la configuración del equipo actual (usuarios, carpetas compartidas, programas, Office, UniGetUI, Steam) y la guarda en archivos `.psd1` que puedes revisar y editar.
 - **Aplicar**: en el equipo nuevo, aplica esos archivos y además una serie de ajustes de Windows (menú contextual clásico, terminales, Edge, Explorador y energía).
 
 Todo es configurable: qué módulos se ejecutan, qué ajustes se aplican y qué datos se restauran. Antes de aplicar se puede **simular** para ver qué haría sin cambiar nada.
@@ -46,6 +46,7 @@ Sin parámetros, `.\OptimizarHP2.ps1` abre un **menú interactivo**.
 | **Usuarios** | Usuarios locales y grupos | Crea usuarios y asigna grupos |
 | **Compartidas** | Recursos compartidos y permisos NTFS | Crea carpetas, las comparte y aplica permisos |
 | **Paquetes** | winget, npm, pip, dotnet tool, módulos PowerShell | Los reinstala |
+| **Office** | Producto, idioma, canal y apps excluidas de Microsoft 365 | Lo instala en silencio con la herramienta oficial de Microsoft |
 | **UniGetUI** | Gestores activos, opciones, opciones de instalación | Las aplica a todos los usuarios |
 | **Steam** | Imágenes, juegos no-Steam, colecciones, opciones de lanzamiento | Las restaura (Steam se instala a mano) |
 

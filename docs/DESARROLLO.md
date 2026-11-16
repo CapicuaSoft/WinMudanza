@@ -38,7 +38,7 @@ OptimizarHP2/
     DependeDe     = @('Usuarios')       # informativo: se avisa si no se ejecuta a la vez
     ArchivoConfig = 'mimodulo.psd1'     # si falta en config\, Aplicar lo omite. $null si no usa config\
     Extraer = {
-        param($Ctx)                     # $Ctx.Raiz, .DirConfig, .Simular, .Accion, .Version
+        param($Ctx)                     # $Ctx.Raiz, .DirConfig, .Simular, .Accion, .Version, .Seleccion
         $datos = [ordered]@{ ... }
         Write-Psd1 -Ruta (Join-Path $Ctx.DirConfig 'mimodulo.psd1') -Datos $datos -Cabecera @('Explicacion de campos')
     }

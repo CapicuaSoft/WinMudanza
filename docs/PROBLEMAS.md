@@ -53,6 +53,14 @@ Prueba a instalarlo a mano para ver el motivo: `winget install --id <Id> -e`. Ca
 
 Instala Python con winget (`Python.Python.3.x`) en el mismo paso o antes, y vuelve a ejecutar `-Solo Paquetes`. El alias de Microsoft Store (`python` en *WindowsApps*) se ignora.
 
+### Office: "setup.exe terminó con código …"
+
+La Office Deployment Tool deja su log en `%TEMP%` (archivos `NOMBREEQUIPO-AAAAMMDD-HHMM.log`). Causas habituales: sin conexión a internet, un `Id` de producto o idioma mal escrito en `office.psd1`, u otra instalación de Office (p. ej. la preinstalada de fábrica) que hay que desinstalar antes.
+
+### Office: aparece "Producto sin licencia"
+
+Es normal hasta activarlo: abre Word e inicia sesión con la cuenta Microsoft que tiene la suscripción.
+
 ### Ajustes: "No se pudo aplicar ... TaskbarDa" u otro aviso de barra de tareas
 
 Windows 11 24H2+ protege algunas claves. Hazlo a mano desde Configuración → Personalización → Barra de tareas.

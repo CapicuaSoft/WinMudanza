@@ -33,6 +33,7 @@ Se crea `config\` con:
 | `compartidas.psd1` | Recursos compartidos y permisos |
 | `paquetes.psd1` | Listas de winget, npm, pip, dotnet tool, PowerShell |
 | `paquetes_no_reinstalables.txt` | Mensajes de winget: programas que no podrá reinstalar |
+| `office.psd1` | Instalación de Microsoft 365 / Office |
 | `unigetui.psd1` + `unigetui\` | Configuración de UniGetUI |
 | `steam.psd1` + `steam\` | Configuración de Steam (imágenes, colecciones) |
 
@@ -112,7 +113,7 @@ Al elegir 1, 2 o 3 se muestra la lista de módulos marcada según `perfil.psd1`.
 | `-DirConfig ruta` | Otra carpeta de configuración (por defecto `config`). |
 | `-SinConfirmar` | No pregunta antes de aplicar. |
 
-Módulos: `Ajustes`, `Usuarios`, `Compartidas`, `Paquetes`, `UniGetUI`, `Steam`.
+Módulos: `Ajustes`, `Usuarios`, `Compartidas`, `Paquetes`, `Office`, `UniGetUI`, `Steam`.
 
 Ejemplos:
 

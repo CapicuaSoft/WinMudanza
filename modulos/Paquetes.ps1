@@ -130,10 +130,17 @@
                 foreach ($id in @($json.Sources | ForEach-Object { $_.Packages } | ForEach-Object { $_.PackageIdentifier })) { $instalados[$id.ToLower()] = $true }
                 Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
             }
+            # Si el modulo Office se ejecuta y esta activo, Office lo instala el (con su configuracion)
+            $officeAparte = $false
+            $rutaOffice = Join-Path $Ctx.DirConfig 'office.psd1'
+            if (@($Ctx.Seleccion) -contains 'Office' -and (Test-Path -LiteralPath $rutaOffice)) {
+                try { $officeAparte = [bool](Read-ConfigPsd1 $rutaOffice).Activo } catch { }
+            }
             $n = 0
             foreach ($id in $lista) {
                 $n++
                 $etiqueta = 'winget [{0,2}/{1}] {2}' -f $n, $lista.Count, $id
+                if ($officeAparte -and $id -like 'Microsoft.Office') { Write-Omitido "$etiqueta (lo instala el modulo Office)"; continue }
                 if ($instalados.ContainsKey($id.ToLower())) { Write-Omitido "$etiqueta (ya instalado)"; continue }
                 $null = Invoke-Cambio $etiqueta {
                     $out = & winget install --id $id -e --source winget --silent --accept-package-agreements --accept-source-agreements --disable-interactivity 2>&1
