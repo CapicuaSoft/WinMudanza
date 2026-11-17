@@ -40,6 +40,7 @@ Se crea `config\` con:
 | `impresoras.psd1` | Impresoras de red / IP y la predeterminada |
 | `carpetas.psd1` | Carpetas personales fuera de su sitio (p. ej. Descargas en `D:`) |
 | `tareas.psd1` + `tareas\` | Tareas programadas de `\Personal\` |
+| `inicio.psd1` + `inicio\` | Menú Inicio, barra de tareas, escritorio y programas al iniciar sesión de cada usuario |
 | `navegadores.psd1` + `navegadores\` | Favoritos de cada navegador (y `favoritos.html` para importar a mano) |
 | `outlook.psd1` + `outlook\` | Cuentas de Outlook (informativo), `.pst` y firmas |
 | `hosts.psd1` | Entradas personalizadas de `hosts` |
@@ -100,7 +101,7 @@ El resumen final lista lo que hay que hacer a mano. Lo habitual:
 
 - **Cuentas Microsoft**: inicia sesión con ellas en el equipo nuevo. Después, vuelve a ejecutar para asignar grupos, permisos, carpetas, ajustes y tareas a sus perfiles:
   ```powershell
-  .\WinMudanza.ps1 -Accion Aplicar -Solo Usuarios,Carpetas,Compartidas,Ajustes,Navegadores,Outlook,Tareas
+  .\WinMudanza.ps1 -Accion Aplicar -Solo Usuarios,Carpetas,Compartidas,Ajustes,Navegadores,Outlook,Tareas,Inicio
   ```
 - **Office**: abre Word e inicia sesión con la cuenta que tiene la suscripción.
 - **Outlook**: añade cada cuenta de la lista de pendientes (Archivo > Agregar cuenta) y vuelve a abrir los `.pst`.
@@ -142,7 +143,7 @@ Al elegir 1, 4, 5 o 6 se muestra la lista de módulos marcada según `perfil.psd
 | `-SinConfirmar` | No pregunta nada: ni confirmación, ni contraseñas (los usuarios en `'CAMBIAR'` darán error), ni reiniciar. |
 | `-SinReiniciar` | Aplica todos los módulos seguidos aunque alguno necesite reiniciar. |
 
-Módulos: `Ajustes`, `Wifi`, `Caracteristicas`, `Usuarios`, `Carpetas`, `Compartidas`, `UnidadesRed`, `Impresoras`, `Hosts`, `Paquetes`, `Office`, `Menus`, `Entorno`, `Desarrollo`, `UniGetUI`, `Navegadores`, `Outlook`, `Tareas`, `Steam`.
+Módulos: `Ajustes`, `Wifi`, `Caracteristicas`, `Usuarios`, `Carpetas`, `Compartidas`, `UnidadesRed`, `Impresoras`, `Hosts`, `Paquetes`, `Office`, `Menus`, `Entorno`, `Desarrollo`, `UniGetUI`, `Navegadores`, `Outlook`, `Tareas`, `Inicio`, `Steam`.
 
 Ejemplos:
 

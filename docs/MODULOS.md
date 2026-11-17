@@ -1,6 +1,6 @@
 # Módulos
 
-Orden de ejecución al aplicar: **Ajustes → Wifi → Características → Usuarios → Carpetas → Compartidas → Unidades de red → Impresoras → Hosts → Paquetes → Office → Menús → Entorno → Desarrollo → UniGetUI → Navegadores → Outlook → Tareas → Steam**.
+Orden de ejecución al aplicar: **Ajustes → Wifi → Características → Usuarios → Carpetas → Compartidas → Unidades de red → Impresoras → Hosts → Paquetes → Office → Menús → Entorno → Desarrollo → UniGetUI → Navegadores → Outlook → Tareas → Inicio → Steam**.
 
 Los módulos que tienen bloque `Revisar` (Usuarios, Carpetas, Compartidas, Outlook, Tareas, Steam) participan en la **revisión antes de formatear** (`-Accion Revisar` y al final de Extraer).
 
@@ -306,6 +306,33 @@ Outlook clásico (Microsoft 365 / Office 2016 o posterior). Windows no permite t
 **Limitaciones:**
 - Si la cuenta de la tarea aún no existe (cuenta Microsoft sin iniciar sesión), queda como pendiente: inicia sesión con ella y ejecuta `-Solo Tareas`.
 - Las tareas que se ejecutan «aunque el usuario no haya iniciado sesión» **con contraseña guardada** no se pueden restaurar sin ella: quedan como pendientes, para importarlas a mano desde su `.xml`. Las que no guardan contraseña (opción «No almacenar contraseña») sí se restauran.
+
+---
+
+## Inicio
+
+**Extrae**, de cada usuario:
+- **Menú Inicio:** los anclados, es decir, el archivo `start2.bin` (y `start*.bin`) de `AppData\Local\Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState`.
+- **Barra de tareas:** los accesos de `AppData\Roaming\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar` y la clave del registro `Explorer\Taskband`, que guarda su orden.
+- **Escritorio:** los accesos directos (`.lnk`, `.url`) del escritorio del usuario y del escritorio público (todos los usuarios), qué iconos de Windows se muestran (Este equipo, Papelera, Red, Panel de control, carpeta del usuario) y la posición de los iconos (`Shell\Bags\1\Desktop`). Los documentos y carpetas del escritorio **no** se copian: Extraer avisa si los hay. Si el escritorio está fuera del perfil (por ejemplo en `D:`, con el módulo Carpetas) o en OneDrive, ya se conserva allí y no se copia.
+- **Al iniciar sesión:** los accesos de la carpeta Inicio del menú Inicio (`shell:startup`), y también los de la carpeta común de todos los usuarios (`shell:common startup`).
+
+Se guarda en `config\inicio\<usuario>\` (`MenuInicio`, `BarraTareas`, `Escritorio`, `AlIniciar`) y `config\inicio\_Comun\` (`Escritorio`, `AlIniciar`).
+
+**Aplica:**
+- Menú Inicio, barra de tareas, iconos de Windows del escritorio y posición de los iconos se restauran **una sola vez por usuario** (queda marcado en `HKCU\Software\WinMudanza\Inicio`), para no deshacer lo que el usuario cambie después. El `start2.bin` anterior se guarda como `start2.bin.wmud.bak`.
+- Si es el usuario que ejecuta WinMudanza, se reinicia su Explorador para que se vea el cambio. Los demás lo verán al iniciar sesión.
+- Del escritorio y de la carpeta Inicio solo se copian los accesos que falten.
+
+**Depende de:** Usuarios, Paquetes (los programas anclados deben estar instalados) y Carpetas (dónde está el escritorio).
+
+**Limitaciones:**
+- Windows 11 no tiene una forma oficial de cambiar los anclados de un usuario ya creado: se copia el archivo tal cual. Funciona entre equipos con Windows 11, pero Microsoft no lo documenta y podría dejar de funcionar en una versión futura.
+- Los anclados y accesos de programas que no estén instalados no funcionan hasta instalarlos.
+- La posición de los iconos depende de la resolución de la pantalla: con otra distinta, Windows puede recolocarlos.
+- Si otro usuario tiene la sesión abierta, se salta (su Explorador sobrescribiría el cambio): cierra su sesión y ejecuta `-Solo Inicio`.
+- Si el usuario aún no tiene perfil, queda como pendiente.
+- Los programas que se abren al iniciar sesión desde el registro (`Run`) no se copian: la mayoría los vuelve a configurar el propio programa al instalarse.
 
 ---
 

@@ -59,7 +59,7 @@ Además, `perfil.psd1` tiene:
 | `ContinuarTrasReinicio` | `$true`: si un módulo necesita reiniciar, Aplicar se detiene, programa la tarea `WinMudanza-Continuar` y sigue al volver a iniciar sesión. `$false`: aplica todo seguido y deja el reinicio como pendiente. |
 | `CarpetasTareas` | Carpetas del Programador de tareas que guarda y restaura el módulo Tareas. Por defecto `@('\Personal\')`. |
 
-Otros módulos en `Modulos`: `Wifi`, `Carpetas`, `UnidadesRed`, `Impresoras`, `Hosts`, `Menus` (sin Extraer), `Entorno`, `Desarrollo`, `Navegadores`, `Outlook`, `Tareas`.
+Otros módulos en `Modulos`: `Wifi`, `Carpetas`, `UnidadesRed`, `Impresoras`, `Hosts`, `Menus` (sin Extraer), `Entorno`, `Desarrollo`, `Navegadores`, `Outlook`, `Tareas`, `Inicio`.
 
 ---
 
@@ -242,6 +242,43 @@ Carpetas válidas: `Escritorio`, `Documentos`, `Descargas`, `Musica`, `Imagenes`
 | `Activa` | `$false` la registra desactivada. |
 
 Para no restaurar una tarea, borra o comenta su bloque.
+
+---
+
+## `config\inicio.psd1` + `config\inicio\`
+
+```powershell
+@{
+    Usuarios = @(
+        @{
+            Usuario     = 'ana'
+            MenuInicio  = $true
+            BarraTareas = @('File Explorer.lnk', 'Microsoft Edge.lnk')
+            Taskband    = @{ ... }     # registro de la barra de tareas (no editar)
+            Escritorio  = @('Absolum Demo.url')
+            IconosSistema = @{ ... }   # iconos de Windows visibles (no editar)
+            Posiciones  = @{ ... }     # posición de los iconos (no editar)
+            AlIniciar   = @('Password Safe.lnk')
+        }
+    )
+    AlIniciarComun  = @()
+    EscritorioComun = @('CPUID CPU-Z.lnk')
+}
+```
+
+| Campo | Descripción |
+|---|---|
+| `MenuInicio` | `$true` si se guardaron los anclados del menú Inicio. `$false` para no restaurarlos. |
+| `BarraTareas` | Accesos anclados a la barra de tareas. `@()` para no restaurar la barra. |
+| `Taskband` | Valores del registro de la barra de tareas (binarios en base64). No editar. |
+| `Escritorio` | Accesos directos del escritorio del usuario; se copian los que falten. |
+| `IconosSistema` | Iconos de Windows que se muestran en el escritorio (registro, no editar). `@{}` para no restaurarlos. |
+| `Posiciones` | Posición de los iconos del escritorio (registro, no editar). `@{}` para no restaurarla. |
+| `AlIniciar` | Accesos de la carpeta Inicio del usuario; se copian los que falten. |
+| `AlIniciarComun` | Accesos de la carpeta Inicio común (todos los usuarios). |
+| `EscritorioComun` | Accesos del escritorio público (todos los usuarios). |
+
+Los archivos están en `config\inicio\<usuario>\` (`MenuInicio`, `BarraTareas`, `Escritorio`, `AlIniciar`) y `config\inicio\_Comun\`. El menú Inicio, la barra, los iconos de Windows y las posiciones se restauran una sola vez por usuario: para volver a restaurarlos, borra la clave `HKCU\Software\WinMudanza\Inicio` de ese usuario.
 
 ---
 

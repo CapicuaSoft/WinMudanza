@@ -55,6 +55,7 @@ Las contraseñas de los usuarios locales se piden por pantalla al aplicar (o pue
 | **Outlook** | Cuentas de correo, archivos `.pst` y firmas de Outlook clásico | Copia las firmas; las cuentas quedan como pendientes (solo piden email) |
 | **Tareas** | Tareas programadas de la carpeta `\Personal\` del Programador de tareas | Registra las que falten |
 | **UniGetUI** | Gestores activos, opciones, opciones de instalación | Las aplica a todos los usuarios |
+| **Inicio** | Anclados del menú Inicio y de la barra de tareas, iconos del escritorio y programas de la carpeta Inicio | Los restaura una vez por usuario |
 | **Steam** | Imágenes, juegos no-Steam, colecciones, opciones de lanzamiento | Las restaura (Steam se instala a mano) |
 
 Detalle de cada uno en [docs/MODULOS.md](docs/MODULOS.md).

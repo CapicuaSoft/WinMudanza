@@ -43,6 +43,7 @@
         Navegadores     = @{ Extraer = $true;  Aplicar = $true }   # favoritos de Edge, Chrome, Brave, Vivaldi, Opera, Firefox
         Outlook         = @{ Extraer = $true;  Aplicar = $true }   # firmas; cuentas de correo y .pst como pendientes
         Tareas          = @{ Extraer = $true;  Aplicar = $true }   # tareas programadas de CarpetasTareas
+        Inicio          = @{ Extraer = $true;  Aplicar = $true }   # menu Inicio, barra de tareas y programas al iniciar sesion
         UniGetUI        = @{ Extraer = $true;  Aplicar = $true }   # configuracion de UniGetUI
         Steam           = @{ Extraer = $true;  Aplicar = $true }   # imagenes, juegos no-Steam, colecciones, opciones
     }
