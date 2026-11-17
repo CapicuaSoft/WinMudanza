@@ -16,31 +16,27 @@
     Extraer = {
         param($Ctx)
         $usuarios = [ordered]@{}
-        foreach ($p in Get-PerfilesUsuario | Where-Object { -not $_.EsDefault }) {
-            $montada = $null
+        $conocidas = Get-CarpetasConocidas
+        Invoke-EnPerfiles {
+            param($P)
+            if ($P.EsDefault) { return }
+            $usf = Get-Item -LiteralPath "$($P.HKCU)\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" -ErrorAction SilentlyContinue
+            if (-not $usf) { return }
             try {
-                $hkcu = "Registry::HKEY_USERS\$($p.Sid)"
-                if (-not (Test-Path -LiteralPath $hkcu)) {
-                    $montada = 'WMUD_CARP'
-                    $hkcu = Mount-Colmena $montada (Join-Path $p.Ruta 'NTUSER.DAT')
-                    if (-not $hkcu) { $montada = $null; Write-Aviso "$($p.Nombre): no se pudo leer su registro (en uso o sin permisos)"; continue }
-                }
-                $usf = Get-Item -LiteralPath "$hkcu\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" -ErrorAction SilentlyContinue
-                if (-not $usf) { continue }
                 $suyas = [ordered]@{}
-                foreach ($c in (Get-CarpetasConocidas).GetEnumerator()) {
+                foreach ($c in $conocidas.GetEnumerator()) {
                     $v = $usf.GetValue($c.Value[0], $null, 'DoNotExpandEnvironmentNames')
                     if (-not $v) { continue }
-                    $real = $v -replace '(?i)%USERPROFILE%', $p.Ruta
-                    $real = [Environment]::ExpandEnvironmentVariables($real)
-                    if ($real.StartsWith($p.Ruta, [StringComparison]::OrdinalIgnoreCase)) { continue }   # en el perfil: por defecto u OneDrive
+                    $real = [Environment]::ExpandEnvironmentVariables(($v -replace '(?i)%USERPROFILE%', $P.Ruta))
+                    if ($real.StartsWith($P.Ruta, [StringComparison]::OrdinalIgnoreCase)) { continue }   # en el perfil: por defecto u OneDrive
                     if ($real -match '\\OneDrive( - [^\\]+)?(\\|$)') { continue }
                     $suyas[$c.Key] = $v
-                    Write-Ok "$($p.Nombre): $($c.Key) -> $v"
+                    Write-Ok "$($P.Nombre): $($c.Key) -> $v"
                 }
-                if ($suyas.Count -gt 0) { $usuarios[$p.Nombre] = $suyas }
+                if ($suyas.Count -gt 0) { $usuarios[$P.Nombre] = $suyas }
             } finally {
-                if ($montada) { Dismount-Colmena $montada }
+                # Cerrar la clave: si queda abierta, la colmena del usuario no se puede descargar
+                $usf.Close()
             }
         }
         if ($usuarios.Count -eq 0) { Write-Omitido 'Todas las carpetas personales estan en su sitio por defecto (o en OneDrive)' }
