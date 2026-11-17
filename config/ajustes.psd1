@@ -78,4 +78,16 @@
         SinGameModeNiGameDVR  = $true
         SinHibernacion        = $true              # borra hiberfil.sys (desactiva tambien el inicio rapido)
     }
+
+    # 06 - PowerShell preparado para ejecutar y crear scripts
+    PowerShell = @{
+        Activo             = $true
+        # Directiva de ejecucion de todo el equipo (Windows PowerShell 5.1 y PowerShell 7).
+        # RemoteSigned = tus scripts se ejecutan; los descargados de internet deben estar firmados
+        # o desbloqueados (clic derecho > Propiedades > Desbloquear, o Unblock-File). Vacio = no tocar.
+        DirectivaEjecucion = 'RemoteSigned'
+        NuGetYGaleria      = $true                 # Install-Module funciona sin preguntas
+        Tls12              = $true                 # PowerShell 5.1 descarga siempre con TLS 1.2+
+        DobleClicEjecuta   = $true                 # doble clic en .ps1 lo ejecuta (Editar sigue en el clic derecho)
+    }
 }

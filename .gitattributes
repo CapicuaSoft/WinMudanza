@@ -1,0 +1,2 @@
+# Los .cmd deben tener saltos de linea de Windows
+*.cmd text eol=crlf

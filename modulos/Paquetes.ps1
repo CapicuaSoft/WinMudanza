@@ -19,7 +19,7 @@
         # ---------- Winget ----------
         $winget = @()
         if (Test-Comando 'winget') {
-            $tmp = Join-Path $env:TEMP "ohp2_winget_$PID.json"
+            $tmp = Join-Path $env:TEMP "wmud_winget_$PID.json"
             $salida = & winget export -o $tmp --source winget --accept-source-agreements --disable-interactivity 2>&1
             if (Test-Path -LiteralPath $tmp) {
                 $json = Get-Content -LiteralPath $tmp -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -123,7 +123,7 @@
             Write-Fallo 'winget no esta disponible. Actualiza "Instalador de aplicacion" desde Microsoft Store e inicia sesion una vez.'
         } else {
             $instalados = @{}
-            $tmp = Join-Path $env:TEMP "ohp2_winget_inst_$PID.json"
+            $tmp = Join-Path $env:TEMP "wmud_winget_inst_$PID.json"
             $null = & winget export -o $tmp --source winget --accept-source-agreements --disable-interactivity 2>&1
             if (Test-Path -LiteralPath $tmp) {
                 $json = Get-Content -LiteralPath $tmp -Raw -Encoding UTF8 | ConvertFrom-Json

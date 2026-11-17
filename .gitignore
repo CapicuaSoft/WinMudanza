@@ -1,11 +1,14 @@
-# Configuracion extraida: contiene contrasenas en texto plano y datos del equipo
-config/
+# config\: solo se versionan perfil.psd1 y ajustes.psd1 (se editan a mano).
+# Todo lo demas lo genera Extraer: contrasenas en texto plano y datos del equipo.
+config/*
+!config/perfil.psd1
+!config/ajustes.psd1
 
 # Registros de ejecucion
 logs/
 
 # Respaldos que crean los modulos al sobrescribir archivos
-*.ohp2.bak
+*.wmud.bak
 
 # Configuracion de Sandbox generada
 *.wsb

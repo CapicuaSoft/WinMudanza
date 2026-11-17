@@ -3,29 +3,36 @@
 ## Estructura
 
 ```
-OptimizarHP2/
-  OptimizarHP2.ps1      Entrada: parámetros, menú, selección de módulos, ejecución y resumen
-  perfil.psd1           Qué módulos se ejecutan en Extraer/Aplicar
-  ajustes.psd1          Valores del módulo Ajustes
-  lib/
+WinMudanza/
+  WinMudanza.ps1      Entrada: parámetros, menú, selección de módulos, ejecución y resumen
+  lib/                  Librerías comunes a todos los módulos
     Comun.psm1          Estado, mensajes/log, Invoke-Cambio, Set-RegValor, perfiles, cuentas, utilidades
     Psd1.psm1           Serializador a .psd1 (la lectura es Import-PowerShellDataFile)
-    Vdf.psm1            VDF de Steam: binario (shortcuts.vdf) y texto (localconfig.vdf)
-  ajustes/NN_*.ps1      Un archivo por grupo de ajustes (los ejecuta el módulo Ajustes)
   modulos/*.ps1         Un archivo por módulo
+  modulos/<Módulo>/     Hijos de un módulo (solo los usa ese módulo):
+    Ajustes/NN_*.ps1    Un archivo por grupo de ajustes
+    Steam/Vdf.psm1      VDF de Steam: binario (shortcuts.vdf) y texto (localconfig.vdf)
   pruebas/              Comprobación de sintaxis y lanzador de Windows Sandbox
   ejemplos/             .psd1 de ejemplo con datos ficticios
   docs/                 Documentación
-  config/  logs/        Generados en ejecución (excluidos de git)
+  config/
+    perfil.psd1         Qué módulos se ejecutan en Extraer/Aplicar (en git)
+    ajustes.psd1        Valores del módulo Ajustes (en git)
+    *                   Lo demás lo genera Extraer (excluido de git)
+  logs/                 Registros de ejecución (excluidos de git)
 ```
 
 ## Flujo
 
-1. `OptimizarHP2.ps1` importa `lib\*.psm1` (globales), lee `perfil.psd1` y ejecuta cada archivo de `modulos\`, que **devuelve una tabla** describiendo el módulo.
+1. `WinMudanza.ps1` importa `lib\*.psm1` (globales), lee `perfil.psd1` y ejecuta cada archivo de `modulos\`, que **devuelve una tabla** describiendo el módulo.
 2. Calcula la selección (`perfil.psd1` → `-Solo` → `-Omitir` → menú).
-3. `Initialize-OHP2` crea el estado (simulación, log, contadores, pendientes).
-4. Por cada módulo seleccionado, en orden de `Orden`, invoca `Extraer` o `Aplicar` con un objeto `$Ctx`.
-5. Compara contadores de errores/avisos antes y después para el resumen.
+3. `Initialize-WinMudanza` crea el estado (simulación, log, contadores, pendientes).
+4. Por cada módulo seleccionado, en orden de `Orden`, invoca `Extraer` o `Aplicar` con un objeto `$Ctx` (`Raiz`, `DirConfig`, `Simular`, `Accion`, `Version`, `Seleccion`, `Interactivo`).
+5. Compara contadores de errores/avisos (y en Comparar, de cambios simulados) antes y después para el resumen.
+6. Extraer termina con la revisión (`Invoke-Revision`: comprobaciones generales + bloque `Revisar` de cada módulo) y la copia a `CopiarA`.
+7. Si un módulo llama a `Set-ReinicioNecesario` y `ContinuarTrasReinicio` está activo, los módulos restantes no se ejecutan: se registra la tarea `WinMudanza-Continuar` (al iniciar sesión, elevada) que relanza `-Accion Aplicar -Solo <restantes> -Continuacion`.
+
+**Comparar** es Aplicar en simulación: cada `Write-Simulado` cuenta como diferencia. Por eso `Set-RegValor` no escribe (ni simula) si el valor ya es igual, y los módulos deben detectar lo ya aplicado.
 
 ## Contrato de un módulo
 
@@ -52,10 +59,26 @@ OptimizarHP2/
 
 Después añádelo a `perfil.psd1` y documéntalo en `docs\MODULOS.md` y `docs\CONFIGURACION.md`, con un ejemplo en `ejemplos\`.
 
+Bloques opcionales:
+
+- `Revisar = { param($Ctx) ... }`: comprobaciones antes de formatear. Usa `Write-Aviso` para lo que se perdería (p. ej. `Test-EnUnidadSistema $ruta`) y `Write-Ok`/`Write-Info` para lo demás. Solo se ejecuta si existe su `ArchivoConfig`.
+- En `Aplicar`, `Set-ReinicioNecesario 'motivo'` pide reiniciar antes de seguir con los módulos siguientes.
+- `$Ctx.Interactivo` es `$false` con `-SinConfirmar`: no uses `Read-Host` entonces.
+
+Utilidades de rutas: `ConvertTo-RutaPortable` (`C:\Users\x\AppData\Roaming` → `%APPDATA%`), `ConvertFrom-RutaPortable`, `Test-EnUnidadSistema`.
+
+## Hijos de un módulo
+
+Lo que solo usa un módulo va en `modulos\<Módulo>\`, no en `lib\`:
+- **Librerías** `.psm1`: `WinMudanza.ps1` importa automáticamente todos los `modulos\*\*.psm1` al arrancar (igual que `lib\`), así que sus funciones están disponibles en `Extraer` y `Aplicar`.
+- **Otros archivos** (como los ajustes `.ps1`): los carga el propio módulo con `Join-Path $Ctx.Raiz 'modulos\<Módulo>'`.
+
+El cargador de módulos solo lee `modulos\*.ps1` (no entra en subcarpetas), así que los hijos nunca se confunden con módulos.
+
 ## Contrato de un ajuste
 
 ```powershell
-# ajustes\06_MiAjuste.ps1
+# modulos\Ajustes\06_MiAjuste.ps1
 @{
     Clave   = 'MiAjuste'                # nombre de la sección en ajustes.psd1
     Nombre  = 'Texto corto'
@@ -81,7 +104,7 @@ Invoke-EnPerfiles {
     param($P)   # $P.Nombre, .Sid, .Ruta, .EsDefault, .HKCU, .Clases
     Set-RegValor -Ruta "$($P.HKCU)\Software\..." -Nombre X -Valor 1
     if ($P.Clases) { Set-RegValor -Ruta "$($P.Clases)\CLSID\..." ... }
-    else { Set-RunOnce $P.HKCU 'OHP2_X' 'reg.exe add "HKCU\Software\Classes\..." ...' }
+    else { Set-RunOnce $P.HKCU 'WMUD_X' 'reg.exe add "HKCU\Software\Classes\..." ...' }
 }
 ```
 
@@ -103,9 +126,10 @@ Invoke-EnPerfiles {
 
 ```powershell
 .\pruebas\Probar-Sintaxis.ps1                                    # sintaxis, BOM y lectura de .psd1
-.\OptimizarHP2.ps1 -Accion Extraer -DirConfig $env:TEMP\ohp2    # extracción (solo lee)
-.\OptimizarHP2.ps1 -Accion Aplicar -WhatIf -DirConfig .\ejemplos # simulación con los ejemplos
-.\pruebas\Abrir-Sandbox.ps1                                     # aplicar de verdad en Windows Sandbox
+.\WinMudanza.ps1 -Accion Extraer -DirConfig $env:TEMP\wmud    # extracción (solo lee)
+.\WinMudanza.ps1 -Accion Aplicar -WhatIf -DirConfig .\ejemplos # simulación con los ejemplos
+.\WinMudanza.ps1 -Accion Comparar                              # diferencias entre config\ y este equipo
+.\pruebas\Abrir-Sandbox.ps1 -Probar                             # aplicar de verdad en Windows Sandbox (automático)
 ```
 
 Antes de dar por buena una versión: sintaxis OK, extracción sin errores, simulación sin errores y, en Sandbox, una aplicación real seguida de una segunda ejecución que debe mostrar todo como `--` (ya aplicado).

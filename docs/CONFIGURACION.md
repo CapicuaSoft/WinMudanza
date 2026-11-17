@@ -11,15 +11,26 @@ Si un archivo tiene un error de formato, el script indica el archivo y la línea
 
 Hay ejemplos con datos ficticios en [`ejemplos/`](../ejemplos/).
 
+Todos están en `config\`:
+
+| Archivo | Quién lo crea | En git |
+|---|---|---|
+| `perfil.psd1`, `ajustes.psd1` | Se editan a mano | Sí |
+| El resto (`usuarios.psd1`, `paquetes.psd1`, `steam\`…) | Extraer | No (datos del equipo y contraseñas) |
+
+`-DirConfig` cambia solo la carpeta de lo extraído; `perfil.psd1` y `ajustes.psd1` se leen siempre de `config\`.
+
 ---
 
-## `perfil.psd1` — qué módulos se ejecutan
+## `config\perfil.psd1` — qué módulos se ejecutan
 
 ```powershell
 @{
     DirConfig = 'config'
     Modulos = @{
         Ajustes     = @{ Extraer = $false; Aplicar = $true }
+        Wifi            = @{ Extraer = $true;  Aplicar = $true }
+        Caracteristicas = @{ Extraer = $true; Aplicar = $true }
         Usuarios    = @{ Extraer = $true;  Aplicar = $true }
         Compartidas = @{ Extraer = $true;  Aplicar = $true }
         Paquetes    = @{ Extraer = $true;  Aplicar = $true }
@@ -32,7 +43,7 @@ Hay ejemplos con datos ficticios en [`ejemplos/`](../ejemplos/).
 
 | Campo | Descripción |
 |---|---|
-| `DirConfig` | Carpeta de la configuración extraída (relativa a OptimizarHP2 o absoluta). |
+| `DirConfig` | Carpeta de la configuración extraída (relativa a WinMudanza o absoluta). |
 | `Modulos.<M>.Extraer` | Si el módulo se ejecuta al extraer. |
 | `Modulos.<M>.Aplicar` | Si el módulo se ejecuta al aplicar. |
 
@@ -40,7 +51,18 @@ Hay ejemplos con datos ficticios en [`ejemplos/`](../ejemplos/).
 
 ---
 
-## `ajustes.psd1` — ajustes de Windows
+Además, `perfil.psd1` tiene:
+
+| Campo | Descripción |
+|---|---|
+| `CopiarA` | Carpeta fuera de C: donde Extraer copia WinMudanza con su configuración al terminar, y destino por defecto de `-Accion Copiar` (p. ej. `'D:\WinMudanza'`). Vacío = no copiar. |
+| `ContinuarTrasReinicio` | `$true`: si un módulo necesita reiniciar, Aplicar se detiene, programa la tarea `WinMudanza-Continuar` y sigue al volver a iniciar sesión. `$false`: aplica todo seguido y deja el reinicio como pendiente. |
+
+Módulos nuevos en `Modulos`: `Wifi`, `UnidadesRed`, `Impresoras`, `Hosts`, `Entorno`, `Desarrollo`.
+
+---
+
+## `config\ajustes.psd1` — ajustes de Windows
 
 No se extrae: lo defines tú. Cada sección tiene `Activo` y sus opciones. Los ajustes de usuario se aplican a **todos los perfiles** y al perfil **Default** (lo heredan los usuarios nuevos).
 
@@ -77,6 +99,45 @@ No se extrae: lo defines tú. Cada sección tiene `Activo` y sus opciones. Los a
 
 > La sección `Energia` está pensada para **equipos de sobremesa**. En un portátil desactiva `PlanAltoRendimiento`, `SinSuspensionUSB` y `SinHibernacion`.
 
+### Sección `PowerShell` (06)
+
+| Campo | Descripción |
+|---|---|
+| `DirectivaEjecucion` | Directiva de todo el equipo: `RemoteSigned` (recomendada: tus scripts sí, los descargados deben estar firmados o desbloqueados), `AllSigned`, `Unrestricted`, `Bypass`. Vacío = no tocar. Se aplica a Windows PowerShell 5.1 y, si está instalado, a PowerShell 7. |
+| `NuGetYGaleria` | Instala el proveedor NuGet y marca PowerShell Gallery como de confianza: `Install-Module` sin preguntas. |
+| `Tls12` | .NET Framework usa siempre TLS 1.2+ (evita errores de descarga en PowerShell 5.1). |
+| `DobleClicEjecuta` | Doble clic en un `.ps1` lo ejecuta con PowerShell (antes abría el Bloc de notas). *Editar* sigue en el clic derecho. |
+
+---
+
+## `config\wifi.psd1`
+
+```powershell
+@{ Redes = @( @{ Nombre = 'MiCasa'; Archivo = 'Wi-Fi-MiCasa.xml' } ) }
+```
+
+`Archivo` es el perfil exportado en `config\wifi\` (XML de Windows, con la contraseña en claro). Comenta una red para no añadirla.
+
+---
+
+## `config\caracteristicas.psd1`
+
+```powershell
+@{
+    Activar = @(
+        'Containers-DisposableClientVM'
+        'Microsoft-Hyper-V-All'
+        'Microsoft-Windows-Subsystem-Linux'
+        'NetFx3'
+        # 'WindowsMediaPlayer'      <- comentada: no se activa
+    )
+}
+```
+
+- `Activar`: nombres técnicos de las características (la cabecera del archivo extraído incluye la descripción de cada una).
+- Solo se activan; quitar una de la lista **no** la desactiva en el equipo nuevo.
+- Para ver todas las disponibles: `Get-WindowsOptionalFeature -Online | Sort-Object FeatureName` (como Administrador).
+
 ---
 
 ## `config\usuarios.psd1`
@@ -109,6 +170,40 @@ Si un usuario ya existe, **no se cambia su contraseña**; solo se añaden los gr
 | `NTFS.Permisos[]` | Permisos explícitos: `Cuenta`, `Sid`, `Derechos` (`FullControl`, `Modify`, `ReadAndExecute`, `Read`, `Write`… combinables con coma), `Tipo`, `Herencia`, `Propagacion`. |
 
 Las cuentas locales se buscan **por nombre** (su SID cambia al reinstalar). Las de Windows (`Everyone`/`Todos`, `Administradores`, `SYSTEM`…) se buscan por **SID**, así funcionan en cualquier idioma.
+
+---
+
+## `config\unidadesred.psd1`
+
+```powershell
+@{ Unidades = @( @{ Letra = 'Z'; Ruta = '\\nas\fotos'; Usuario = '' } ) }
+```
+
+`Usuario` vacío = la cuenta de Windows. La contraseña la pide Windows al conectar.
+
+---
+
+## `config\impresoras.psd1`
+
+```powershell
+@{
+    Impresoras = @(
+        @{ Tipo = 'IP';  Nombre = 'Impresora salon'; Direccion = '192.168.1.50'; PuertoTcp = 9100; Controlador = 'Microsoft IPP Class Driver' }
+        @{ Tipo = 'Red'; Nombre = '\\servidor\Laser'; Conexion = '\\servidor\Laser' }
+    )
+    Predeterminada = 'Impresora salon'    # vacío = no cambiar
+}
+```
+
+---
+
+## `config\hosts.psd1`
+
+```powershell
+@{ Entradas = @( '192.168.1.10 nas.casa' ) }
+```
+
+Se añaden las que falten; quitar una de la lista **no** la borra del equipo.
 
 ---
 
@@ -159,6 +254,33 @@ PowerShell = @{ Activo = $true; Paquetes = @( ... ) }
 | `Silencioso` | `$true` = sin ventanas; `$false` = muestra el progreso de instalación. |
 
 Equivale al `configuration.xml` de la Office Deployment Tool; el módulo lo genera al aplicar.
+
+---
+
+## `config\entorno.psd1`
+
+```powershell
+@{
+    Equipo  = @{ Variables = @{ JAVA_HOME = 'C:\Program Files\...' }; Path = @( 'C:\Program Files\Git\cmd' ) }
+    Usuario = @{ Variables = @{ JD2_HOME = '%ProgramFiles%\JDownloader' }; Path = @( '%APPDATA%\npm' ) }
+}
+```
+
+- `Variables`: se crean las que falten; las que ya existen con otro valor no se cambian (se avisa).
+- `Path`: carpetas que se añaden al final si faltan y existen.
+- `Usuario` se aplica al usuario que ejecuta WinMudanza.
+
+---
+
+## `config\desarrollo.psd1`
+
+```powershell
+@{ Elementos = @( @{ Nombre = 'Git'; Ruta = '%USERPROFILE%\.gitconfig'; Archivo = '01_.gitconfig' } ) }
+```
+
+- `Archivo`: copia guardada en `config\desarrollo\` (archivo o carpeta).
+- `Ruta`: destino; admite `%USERPROFILE%`, `%APPDATA%`, `%LOCALAPPDATA%`… y `{Documentos}` (la carpeta Documentos, aunque esté en OneDrive).
+- Para añadir otros archivos de forma permanente, amplía la lista de candidatos en `modulos\Desarrollo.ps1`.
 
 ---
 

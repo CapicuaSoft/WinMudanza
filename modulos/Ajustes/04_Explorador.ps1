@@ -40,7 +40,7 @@
                 if ($P.Clases) {
                     $ok = (Set-RegValor -Ruta "$($P.Clases)\$onedrive" -Nombre 'System.IsPinnedToNamespaceTree' -Valor 0) -and $ok
                 } else {
-                    $ok = (Set-RunOnce $P.HKCU 'OHP2_OneDrive' "reg.exe add `"HKCU\Software\Classes\$onedrive`" /v System.IsPinnedToNamespaceTree /t REG_DWORD /d 0 /f") -and $ok
+                    $ok = (Set-RunOnce $P.HKCU 'WMUD_OneDrive' "reg.exe add `"HKCU\Software\Classes\$onedrive`" /v System.IsPinnedToNamespaceTree /t REG_DWORD /d 0 /f") -and $ok
                 }
             }
             if ($ok -and -not (Test-Simulacion)) { Write-Ok "Explorador y barra de tareas: $($P.Nombre)" }

@@ -4,14 +4,14 @@ Guía para Claude Code al trabajar en este repositorio.
 
 ## Propósito
 
-OptimizarHP2 (v2 de `C:\Proyectos\OptimizarHP`, que queda solo como referencia) configura un Windows 11 recién instalado y traslada configuración entre equipos: **Extraer** (equipo actual → `config\*.psd1` editables) y **Aplicar** (`config\` + `ajustes.psd1` → equipo nuevo). Debe poder usarlo otra persona: nada específico de un equipo en el código.
+WinMudanza (antes OptimizarHP2; v2 de `C:\Proyectos\OptimizarHP`, que queda solo como referencia) configura un Windows 11 recién instalado y traslada configuración entre equipos: **Extraer** (equipo actual → `config\*.psd1` editables) y **Aplicar** (`config\` → equipo nuevo). Debe poder usarlo otra persona: nada específico de un equipo en el código.
 
 ## Comandos
 
 ```powershell
 .\pruebas\Probar-Sintaxis.ps1                                  # SIEMPRE tras editar: sintaxis + BOM + .psd1
-.\OptimizarHP2.ps1 -Accion Aplicar -WhatIf -DirConfig .\ejemplos
-.\OptimizarHP2.ps1 -Accion Extraer -DirConfig <scratchpad>\config   # solo lee el equipo
+.\WinMudanza.ps1 -Accion Aplicar -WhatIf -DirConfig .\ejemplos
+.\WinMudanza.ps1 -Accion Extraer -DirConfig <scratchpad>\config   # solo lee el equipo
 ```
 
 No ejecutar `Aplicar` real en el equipo del usuario: usar `-WhatIf`, o Windows Sandbox (`pruebas\Abrir-Sandbox.ps1`). Al probar módulos con rutas redirigidas (p. ej. `RutaSteam`), **verificar antes de aplicar** que la ruta apunta a la copia de prueba.
@@ -20,9 +20,10 @@ No ejecutar `Aplicar` real en el equipo del usuario: usar `-WhatIf`, o Windows S
 
 Ver `docs\DESARROLLO.md`. Resumen:
 - `modulos\*.ps1` devuelven una tabla `@{ Nombre; Descripcion; Orden; DependeDe; ArchivoConfig; Extraer = {param($Ctx)}; Aplicar = {param($Ctx)} }`.
-- `ajustes\NN_*.ps1` devuelven `@{ Clave; Nombre; Aplicar = {param($Cfg,$Ctx)} }`, activados por `ajustes.psd1`.
+- `modulos\Ajustes\NN_*.ps1` (hijos del módulo Ajustes) devuelven `@{ Clave; Nombre; Aplicar = {param($Cfg,$Ctx)} }`, activados por `config\ajustes.psd1`.
 - `lib\Comun.psm1`: `Invoke-Cambio`, `Set-RegValor`, `Invoke-EnPerfiles`, mensajes, `Add-Pendiente`, cuentas portables.
-- `lib\Psd1.psm1` (escribir .psd1), `lib\Vdf.psm1` (Steam binario/texto).
+- `lib\Psd1.psm1` (escribir .psd1). En `lib\` solo lo común a varios módulos.
+- Lo que usa un solo módulo va en `modulos\<Módulo>\` (hijos): `modulos\Steam\Vdf.psm1` (VDF binario/texto). Los `modulos\*\*.psm1` se importan automáticamente.
 
 ## Reglas
 
@@ -37,7 +38,7 @@ Ver `docs\DESARROLLO.md`. Resumen:
   ```
 - Mensajes de consola sin tildes; documentación (`.md`) en español con tildes.
 - Cada cambio de funcionalidad se documenta en `docs\` (MODULOS, CONFIGURACION) y `CHANGELOG.md`, con ejemplo en `ejemplos\` si cambia un formato.
-- `config\` y `logs\` están en `.gitignore` (contraseñas en texto plano). Commits solo cuando el usuario lo pida.
+- En `config\` solo se versionan `perfil.psd1` y `ajustes.psd1`; lo extraído y `logs\` están en `.gitignore` (contraseñas en texto plano). Nunca usar `git add -f` en `config\`. Commits solo cuando el usuario lo pida.
 
 ## Decisiones del usuario (no reabrir sin que lo pida)
 
@@ -46,5 +47,7 @@ Ver `docs\DESARROLLO.md`. Resumen:
 - Paquetes: winget (solo fuente winget) + npm, pip, dotnet tool, módulos PowerShell.
 - Ajustes de usuario, UniGetUI: todos los perfiles + Default. Steam: cuentas detectadas; Steam y emuladores se instalan a mano.
 - Edge: si las directivas obligatorias no aplican sin dominio, usar `TipoDirectiva = 'Recomendada'`.
+- v3 (pedido del usuario): Revisar antes de formatear, Copiar fuera de C: (`CopiarA = 'D:\WinMudanza'`), lanzador `.cmd`, continuar tras reiniciar, contraseñas por pantalla, Comparar, Sandbox automático; módulos Wifi, UnidadesRed, Impresoras, Hosts, Entorno, Desarrollo; ajuste 06 PowerShell (RemoteSigned, NuGet+PSGallery, TLS 1.2, doble clic). Wi-Fi y claves SSH en texto plano en `config\` (como las contraseñas).
+- Características de Windows: solo activar, nunca desactivar. Sin capacidades (OpenSSH, Paint, idiomas…) ni distribuciones de WSL.
 - Office: módulo propio con la Office Deployment Tool, instalación silenciosa; activación manual. `C:\Proyectos\InstalarOffice` queda intacto como referencia.
 - Ejecución por menú y por parámetros; formato `.psd1`; git solo local.

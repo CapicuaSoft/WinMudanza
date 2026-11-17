@@ -77,7 +77,8 @@
             "Usuarios locales extraidos de $env:COMPUTERNAME el $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
             ''
             'Usuarios: se crean si no existen. Si ya existen solo se ajustan sus grupos.'
-            "  Password = 'CAMBIAR' -> hay que escribir la contrasena (Windows no permite extraerla)."
+            "  Password = 'CAMBIAR' -> se pedira por pantalla al aplicar (Windows no permite extraerla);"
+            "                          tambien puedes escribirla aqui."
             "  Password = ''        -> usuario sin contrasena."
             '  Para no crear un usuario, borra o comenta (#) su bloque.'
             'CuentasMicrosoft: no se pueden crear por script. Inicia sesion con su email en el equipo'
@@ -87,7 +88,16 @@
             'ATENCION: este archivo contiene contrasenas en texto plano. No lo compartas.'
         )
         Write-Info "-> $ruta"
-        if ($usuarios.Count -gt 0) { Add-Pendiente "Escribe las contrasenas en $ruta (Password = 'CAMBIAR')" }
+        if ($usuarios.Count -gt 0) { Write-Info "Contrasenas: escribelas en $ruta o se pediran al aplicar (Password = 'CAMBIAR')" }
+    }
+
+    Revisar = {
+        param($Ctx)
+        $cfg = Read-ConfigPsd1 (Join-Path $Ctx.DirConfig 'usuarios.psd1')
+        $sin = @($cfg.Usuarios | Where-Object { $_ -and $_.Password -eq 'CAMBIAR' } | ForEach-Object { $_.Nombre })
+        if ($sin.Count -gt 0) { Write-Info "Usuarios sin contrasena en usuarios.psd1 ($($sin -join ', ')): se pediran al aplicar. Asegurate de recordarlas." }
+        $ms = @($cfg.CuentasMicrosoft | Where-Object { $_ } | ForEach-Object { $_.Nombre })
+        if ($ms.Count -gt 0) { Write-Info "Cuentas Microsoft ($($ms -join ', ')): necesitaras su email y contrasena para iniciar sesion en el equipo nuevo." }
     }
 
     Aplicar = {
@@ -125,18 +135,37 @@
             if ($existe) {
                 Write-Omitido "$($u.Nombre) ya existe (no se cambia su contrasena)"
             } else {
+                # Contrasena: la del archivo, o se pide por pantalla si es 'CAMBIAR'
+                $segura = $null
                 if ($u.Password -eq 'CAMBIAR') {
-                    Write-Fallo "$($u.Nombre): falta la contrasena en usuarios.psd1 (Password = 'CAMBIAR')"
-                    continue
+                    if (Test-Simulacion) {
+                        Write-Info "$($u.Nombre): la contrasena se pedira por pantalla al aplicar (Password = 'CAMBIAR')"
+                    } elseif ($Ctx.Interactivo) {
+                        for ($intento = 1; $intento -le 3 -and -not $segura; $intento++) {
+                            $p1 = Read-Host "  Contrasena para $($u.Nombre)" -AsSecureString
+                            $p2 = Read-Host "  Repitela" -AsSecureString
+                            $t1 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($p1))
+                            $t2 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($p2))
+                            if ($t1 -ne $t2) { Write-Host '  No coinciden, prueba otra vez.' -ForegroundColor Yellow; continue }
+                            if (-not $t1) { Write-Host '  Vacia no: si no quieres contrasena pon Password = '''' en usuarios.psd1.' -ForegroundColor Yellow; continue }
+                            $segura = $p1
+                        }
+                        if (-not $segura) { Write-Fallo "$($u.Nombre): no se indico la contrasena; no se crea"; continue }
+                    } else {
+                        Write-Fallo "$($u.Nombre): falta la contrasena en usuarios.psd1 (Password = 'CAMBIAR') y -SinConfirmar impide pedirla"
+                        continue
+                    }
+                } elseif (-not [string]::IsNullOrEmpty($u.Password)) {
+                    $segura = ConvertTo-SecureString $u.Password -AsPlainText -Force
                 }
                 $creado = Invoke-Cambio "Crear usuario $($u.Nombre)" {
                     $param = @{ Name = $u.Nombre; ErrorAction = 'Stop' }
                     if ($u.NombreCompleto) { $param.FullName = $u.NombreCompleto }
                     if ($u.Descripcion)    { $param.Description = $u.Descripcion }
-                    if ([string]::IsNullOrEmpty($u.Password)) {
+                    if (-not $segura) {
                         $param.NoPassword = $true
                     } else {
-                        $param.Password = ConvertTo-SecureString $u.Password -AsPlainText -Force
+                        $param.Password = $segura
                         if ($u.PasswordNuncaExpira) { $param.PasswordNeverExpires = $true }
                     }
                     $nuevo = New-LocalUser @param

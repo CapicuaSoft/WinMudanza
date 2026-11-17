@@ -146,7 +146,7 @@
             Write-Info ("{0}: {1} bits, canal {2}, idioma {3}, excluye: {4}" -f $p.Id, $arq, $canal, ($idiomas -join ','), (@($p.Excluir) -join ', '))
         }
 
-        $dir = Join-Path $env:TEMP 'OHP2_Office'
+        $dir = Join-Path $env:TEMP 'WMUD_Office'
         $setup = Join-Path $dir 'setup.exe'
         $rutaXml = Join-Path $dir 'configuration.xml'
 

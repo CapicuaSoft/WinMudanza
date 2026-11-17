@@ -77,6 +77,19 @@
         Write-Info "-> $ruta"
     }
 
+    Revisar = {
+        param($Ctx)
+        $cfg = Read-ConfigPsd1 (Join-Path $Ctx.DirConfig 'compartidas.psd1')
+        foreach ($s in @($cfg.Compartidas)) {
+            if (-not $s -or -not $s.Ruta) { continue }
+            if (Test-EnUnidadSistema $s.Ruta) {
+                Write-Aviso "Carpeta compartida '$($s.Nombre)' en $($s.Ruta): esta en C:. Se recreara vacia; copia antes su contenido."
+            } else {
+                Write-Ok "Carpeta compartida '$($s.Nombre)' en $($s.Ruta) (fuera de C:)"
+            }
+        }
+    }
+
     Aplicar = {
         param($Ctx)
         $cfg = Read-ConfigPsd1 (Join-Path $Ctx.DirConfig 'compartidas.psd1')

@@ -6,7 +6,12 @@ $raiz = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $errores = 0
 
 $archivos = Get-ChildItem -LiteralPath $raiz -Recurse -File |
-    Where-Object { $_.Extension -in '.ps1', '.psm1', '.psd1' -and $_.FullName -notmatch '\\(config|logs)\\' }
+    Where-Object { $_.Extension -in '.ps1', '.psm1', '.psd1' -and $_.FullName -notmatch '\\logs\\' } |
+    Where-Object {
+        # De config\ solo se comprueban los archivos versionados (lo extraido es del usuario)
+        $_.FullName -notmatch '\\config\\' -or
+        ($_.DirectoryName -eq (Join-Path $raiz 'config') -and $_.Name -in 'perfil.psd1', 'ajustes.psd1')
+    }
 
 foreach ($f in $archivos) {
     $rel = $f.FullName.Substring($raiz.Length + 1)

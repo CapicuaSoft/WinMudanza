@@ -127,6 +127,21 @@
         Write-Info "-> $ruta + $destBase"
     }
 
+    Revisar = {
+        param($Ctx)
+        $cfg = Read-ConfigPsd1 (Join-Path $Ctx.DirConfig 'steam.psd1')
+        foreach ($c in @($cfg.Cuentas)) {
+            foreach ($e in @($c.Accesos)) {
+                if (-not $e) { continue }
+                $exe = ([string]$e['Exe']).Trim('"')
+                if (Test-EnUnidadSistema $exe) {
+                    Write-Aviso "Juego no-Steam '$($e['AppName'])' en $exe : esta en C:. Copialo y restauralo en la misma ruta (o edita Exe en steam.psd1)."
+                }
+            }
+        }
+        Write-Info 'Steam: los juegos de la biblioteca en C: se pierden; mueve la biblioteca a D: o vuelve a descargarlos.'
+    }
+
     Aplicar = {
         param($Ctx)
         $cfg = Read-ConfigPsd1 (Join-Path $Ctx.DirConfig 'steam.psd1')
@@ -234,7 +249,7 @@
                                 if (-not $nuevos.Contains($id)) { [void]$final.Add($e) }
                             }
                         }
-                        Copy-Item -LiteralPath $sc -Destination "$sc.ohp2.bak" -Force -ErrorAction Stop
+                        Copy-Item -LiteralPath $sc -Destination "$sc.wmud.bak" -Force -ErrorAction Stop
                     }
                     foreach ($k in $nuevos.Keys) { [void]$final.Add($nuevos[$k]) }
                     $mapa = [ordered]@{}
@@ -250,7 +265,7 @@
                 $null = Invoke-Cambio 'Colecciones (cloudstorage)' {
                     $dCs = Join-Path $cfgDir 'cloudstorage'
                     if (Test-Path -LiteralPath $dCs) {
-                        $bak = "$dCs.ohp2.bak"
+                        $bak = "$dCs.wmud.bak"
                         if (Test-Path -LiteralPath $bak) { Remove-Item -LiteralPath $bak -Recurse -Force -ErrorAction Stop }
                         Copy-Item -LiteralPath $dCs -Destination $bak -Recurse -Force -ErrorAction Stop
                     } else {
@@ -287,7 +302,7 @@
                                 if (-not $kLo) { $kLo = 'LaunchOptions' }
                                 $nodo[$kApp][$kLo] = [string]$opc[$app]
                             }
-                            Copy-Item -LiteralPath $lc -Destination "$lc.ohp2.bak" -Force -ErrorAction Stop
+                            Copy-Item -LiteralPath $lc -Destination "$lc.wmud.bak" -Force -ErrorAction Stop
                             Write-VdfTexto -Datos $leido.Datos -Ruta $lc
                         }
                     }

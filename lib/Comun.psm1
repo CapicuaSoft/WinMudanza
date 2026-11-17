@@ -1,4 +1,4 @@
-﻿# Funciones comunes de OptimizarHP2:
+﻿# Funciones comunes de WinMudanza:
 # - Estado de la ejecucion (simulacion, log, contadores, pendientes)
 # - Mensajes en pantalla + log
 # - Cambios con soporte de simulacion (Invoke-Cambio, Set-RegValor)
@@ -14,7 +14,7 @@ $script:ModuloActual = ''
 # ESTADO Y LOG
 # ==================================================
 
-function Initialize-OHP2 {
+function Initialize-WinMudanza {
     param(
         [Parameter(Mandatory)][string]$Raiz,
         [Parameter(Mandatory)][string]$Accion,
@@ -34,15 +34,17 @@ function Initialize-OHP2 {
         Log        = Join-Path $DirLogs $nombreLog
         Errores    = 0
         Avisos     = 0
+        Simulados  = 0          # cambios que haria (simulacion / Comparar)
+        Reinicio   = ''         # motivo si algun modulo necesita reiniciar antes de seguir
         Pendientes = New-Object System.Collections.ArrayList
     }
     $modo = 'REAL'
     if ($Simular) { $modo = 'SIMULACION' }
-    Write-Log ("OptimizarHP2 - {0} - {1} - {2}\{3}" -f $Accion, $modo, $env:COMPUTERNAME, $env:USERNAME)
+    Write-Log ("WinMudanza - {0} - {1} - {2}\{3}" -f $Accion, $modo, $env:COMPUTERNAME, $env:USERNAME)
     return $script:Estado
 }
 
-function Get-OHP2Estado { return $script:Estado }
+function Get-WinMudanzaEstado { return $script:Estado }
 
 function Set-ModuloActual([string]$Nombre) { $script:ModuloActual = $Nombre }
 
@@ -75,7 +77,10 @@ function Write-Titulo([string]$Texto) {
 
 function Write-Ok([string]$Texto)       { Write-Linea 'OK ' $Texto Green }
 function Write-Omitido([string]$Texto)  { Write-Linea '-- ' $Texto DarkGray }
-function Write-Simulado([string]$Texto) { Write-Linea 'SIM' $Texto Cyan }
+function Write-Simulado([string]$Texto) {
+    if ($script:Estado) { $script:Estado.Simulados++ }
+    Write-Linea 'SIM' $Texto Cyan
+}
 function Write-Info([string]$Texto)     { Write-Linea '   ' $Texto Gray }
 
 function Write-Aviso([string]$Texto) {
@@ -94,6 +99,12 @@ function Add-Pendiente([string]$Texto) {
     if ($script:ModuloActual) { $linea = '[{0}] {1}' -f $script:ModuloActual, $Texto }
     if ($script:Estado) { [void]$script:Estado.Pendientes.Add($linea) }
     Write-Linea 'PEN' $Texto Magenta
+}
+
+# Indica que hay que reiniciar antes de seguir con los modulos siguientes
+# (p. ej. tras activar WSL o Hyper-V). WinMudanza.ps1 decide si para y continua tras reiniciar.
+function Set-ReinicioNecesario([string]$Motivo) {
+    if ($script:Estado -and -not (Test-Simulacion)) { $script:Estado.Reinicio = $Motivo }
 }
 
 # ==================================================
@@ -136,6 +147,8 @@ function Set-RegValor {
         [switch]$FalloComoAviso
     )
     $texto = '{0} \ {1} = {2}' -f $Ruta, $Nombre, $Valor
+    # Si ya tiene ese valor no se escribe (asi la simulacion y Comparar solo muestran diferencias reales)
+    if (Test-RegValorIgual -Ruta $Ruta -Nombre $Nombre -Valor $Valor -Tipo $Tipo) { Write-Log "REG= $texto (ya estaba)"; return $true }
     if (Test-Simulacion) { Write-Simulado "Registro: $texto"; return $true }
     try {
         if (-not (Test-Path -LiteralPath $Ruta)) {
@@ -151,7 +164,29 @@ function Set-RegValor {
     }
 }
 
-# Copia un archivo creando la carpeta destino. Con -Respaldo guarda el original como .ohp2.bak.
+# $true si el valor de registro ya existe con ese contenido y tipo.
+function Test-RegValorIgual([string]$Ruta, [string]$Nombre, $Valor, [string]$Tipo) {
+    try {
+        if ($Ruta -match '<') { return $false }                       # ruta virtual de simulacion
+        if (-not (Test-Path -LiteralPath $Ruta)) { return $false }
+        $clave = Get-Item -LiteralPath $Ruta -ErrorAction Stop
+        $n = $Nombre
+        if ($Nombre -eq '(Default)') { $n = '' }
+        if ($clave.GetValueNames() -notcontains $n) { return $false }
+        $tipos = @{ String = 'String'; ExpandString = 'ExpandString'; DWord = 'DWord'; QWord = 'QWord'; MultiString = 'MultiString'; Binary = 'Binary' }
+        if ([string]$clave.GetValueKind($n) -ne $tipos[$Tipo]) { return $false }
+        $actual = $clave.GetValue($n, $null, 'DoNotExpandEnvironmentNames')
+        switch ($Tipo) {
+            'DWord' { return ([uint32]([int64]$Valor -band 0xFFFFFFFF)) -eq ([uint32]([int64]$actual -band 0xFFFFFFFF)) }
+            'QWord' { return [int64]$actual -eq [int64]$Valor }
+            'MultiString' { return (@($actual) -join "`n") -ceq (@($Valor) -join "`n") }
+            'Binary' { return (@($actual) -join ',') -eq (@($Valor) -join ',') }
+            default { return [string]$actual -ceq [string]$Valor }
+        }
+    } catch { return $false }
+}
+
+# Copia un archivo creando la carpeta destino. Con -Respaldo guarda el original como .wmud.bak.
 function Copy-ArchivoSeguro {
     param(
         [Parameter(Mandatory)][string]$Origen,
@@ -161,7 +196,7 @@ function Copy-ArchivoSeguro {
     $dir = Split-Path -Parent $Destino
     if (-not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force -ErrorAction Stop | Out-Null }
     if ($Respaldo -and (Test-Path -LiteralPath $Destino)) {
-        Copy-Item -LiteralPath $Destino -Destination "$Destino.ohp2.bak" -Force -ErrorAction Stop
+        Copy-Item -LiteralPath $Destino -Destination "$Destino.wmud.bak" -Force -ErrorAction Stop
     }
     Copy-Item -LiteralPath $Origen -Destination $Destino -Force -ErrorAction Stop
 }
@@ -230,13 +265,19 @@ function Invoke-EnPerfiles {
             $hkcu = $null
             $clases = $null
             if (Test-Simulacion) {
+                # Simulacion: no se cargan colmenas. Si el perfil ya esta cargado (sesion abierta) se usa
+                # su registro real (solo se lee); si no, una ruta virtual <Nombre>.
                 $hkcu = "Registry::HKEY_USERS\<$($p.Nombre)>"
-                if (-not $p.EsDefault) { $clases = "Registry::HKEY_USERS\<$($p.Nombre)>_Classes" }
+                if ($p.Sid -and (Test-Path -LiteralPath "Registry::HKEY_USERS\$($p.Sid)")) { $hkcu = "Registry::HKEY_USERS\$($p.Sid)" }
+                if (-not $p.EsDefault) {
+                    $clases = "Registry::HKEY_USERS\<$($p.Nombre)>_Classes"
+                    if ($p.Sid -and (Test-Path -LiteralPath "Registry::HKEY_USERS\$($p.Sid)_Classes")) { $clases = "Registry::HKEY_USERS\$($p.Sid)_Classes" }
+                }
             } else {
                 if ($p.Sid -and (Test-Path -LiteralPath "Registry::HKEY_USERS\$($p.Sid)")) {
                     $hkcu = "Registry::HKEY_USERS\$($p.Sid)"
                 } else {
-                    $nombre = "OHP2_P$indice"
+                    $nombre = "WMUD_P$indice"
                     $hkcu = Mount-Colmena $nombre (Join-Path $p.Ruta 'NTUSER.DAT')
                     if ($hkcu) { $montadas += $nombre }
                 }
@@ -246,7 +287,7 @@ function Invoke-EnPerfiles {
                     } else {
                         $usr = Join-Path $p.Ruta 'AppData\Local\Microsoft\Windows\UsrClass.dat'
                         if (Test-Path -LiteralPath $usr) {
-                            $nombre = "OHP2_P${indice}_Classes"
+                            $nombre = "WMUD_P${indice}_Classes"
                             $clases = Mount-Colmena $nombre $usr
                             if ($clases) { $montadas += $nombre }
                         }
@@ -349,6 +390,41 @@ function Get-PythonConPip {
         if ($LASTEXITCODE -eq 0) { return $c }
     }
     return $null
+}
+
+# Rutas portables entre usuarios/equipos: C:\Users\josel\AppData\Roaming\x -> %APPDATA%\x
+# (se prueban de la mas larga a la mas corta). ConvertFrom-RutaPortable las expande.
+function ConvertTo-RutaPortable([string]$Ruta) {
+    if (-not $Ruta) { return $Ruta }
+    $vars = @(
+        @{ N = '%LOCALAPPDATA%'; V = $env:LOCALAPPDATA }
+        @{ N = '%APPDATA%'; V = $env:APPDATA }
+        @{ N = '%USERPROFILE%'; V = $env:USERPROFILE }
+        @{ N = '%ProgramFiles(x86)%'; V = ${env:ProgramFiles(x86)} }
+        @{ N = '%ProgramFiles%'; V = $env:ProgramFiles }
+        @{ N = '%ProgramData%'; V = $env:ProgramData }
+        @{ N = '%SystemRoot%'; V = $env:SystemRoot }
+    )
+    foreach ($v in $vars) {
+        if (-not $v.V) { continue }
+        $base = $v.V.TrimEnd('\')
+        if ($Ruta.Equals($base, [StringComparison]::OrdinalIgnoreCase)) { return $v.N }
+        if ($Ruta.StartsWith("$base\", [StringComparison]::OrdinalIgnoreCase)) { return $v.N + $Ruta.Substring($base.Length) }
+    }
+    return $Ruta
+}
+
+function ConvertFrom-RutaPortable([string]$Ruta) {
+    if (-not $Ruta) { return $Ruta }
+    return [Environment]::ExpandEnvironmentVariables($Ruta)
+}
+
+# $true si la ruta esta en la unidad de Windows (C:), la que se borra al reinstalar.
+function Test-EnUnidadSistema([string]$Ruta) {
+    if (-not $Ruta) { return $false }
+    $r = ConvertFrom-RutaPortable $Ruta
+    if (-not [IO.Path]::IsPathRooted($r) -or $r.StartsWith('\\')) { return $false }
+    return ([IO.Path]::GetPathRoot($r).TrimEnd('\')) -ieq $env:SystemDrive
 }
 
 function Read-ConfigPsd1([string]$Ruta) {

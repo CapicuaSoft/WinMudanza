@@ -1,20 +1,21 @@
-﻿# Modulo Ajustes: ejecuta los ajustes de la carpeta ajustes\ segun ajustes.psd1.
-# No tiene Extraer: sus valores se definen a mano en ajustes.psd1.
+﻿# Modulo Ajustes: ejecuta los ajustes de la carpeta modulos\Ajustes\ segun config\ajustes.psd1.
+# No tiene Extraer: sus valores se definen a mano en config\ajustes.psd1
+# (siempre se lee de config\, aunque se use -DirConfig).
 
 @{
     Nombre        = 'Ajustes'
-    Descripcion   = 'Menu, terminales, Edge, Explorador y energia'
+    Descripcion   = 'Menu, terminales, Edge, Explorador, energia y PowerShell'
     Orden         = 10
     DependeDe     = @()
     ArchivoConfig = $null
     Extraer       = $null
     Aplicar       = {
         param($Ctx)
-        $rutaCfg = Join-Path $Ctx.Raiz 'ajustes.psd1'
+        $rutaCfg = Join-Path $Ctx.Raiz 'config\ajustes.psd1'
         if (-not (Test-Path -LiteralPath $rutaCfg)) { Write-Fallo "No existe $rutaCfg"; return }
         $cfg = Read-ConfigPsd1 $rutaCfg
 
-        $ajustes = @(Get-ChildItem -LiteralPath (Join-Path $Ctx.Raiz 'ajustes') -Filter '*.ps1' | Sort-Object Name)
+        $ajustes = @(Get-ChildItem -LiteralPath (Join-Path $Ctx.Raiz 'modulos\Ajustes') -Filter '*.ps1' | Sort-Object Name)
         foreach ($archivo in $ajustes) {
             $a = & $archivo.FullName
             $sec = $cfg[$a.Clave]

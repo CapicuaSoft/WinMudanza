@@ -13,7 +13,7 @@
             if ($P.Clases) {
                 $ok = Set-RegValor -Ruta "$($P.Clases)\$clsid" -Nombre '(Default)' -Valor '' -Tipo String
             } else {
-                $ok = Set-RunOnce $P.HKCU 'OHP2_MenuClasico' "reg.exe add `"HKCU\Software\Classes\$clsid`" /ve /d `"`" /f"
+                $ok = Set-RunOnce $P.HKCU 'WMUD_MenuClasico' "reg.exe add `"HKCU\Software\Classes\$clsid`" /ve /d `"`" /f"
             }
             if ($ok -and -not (Test-Simulacion)) {
                 if ($P.Clases) { Write-Ok "Menu clasico: $($P.Nombre)" }

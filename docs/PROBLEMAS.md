@@ -25,6 +25,46 @@ El mensaje indica el archivo y la línea. Causas habituales:
 - llaves `{ }` o paréntesis `( )` desparejados al borrar un bloque;
 - usar variables o expresiones: en `.psd1` solo valen textos, números, `$true`, `$false`, `$null`, listas y tablas.
 
+### Revisar: "está en C:"
+
+Lo marcado se perderá al formatear C:. Copia esos datos a otro disco y, en el equipo nuevo, restáuralos en la **misma ruta** (o edita la ruta en el `.psd1` correspondiente). Para la propia configuración: `-Accion Copiar -Destino D:\WinMudanza`.
+
+### Copiar: "no está vacía y no es una copia de WinMudanza"
+
+Por seguridad, Copiar usa un espejo (`robocopy /MIR`) y no escribe en una carpeta con otros datos. Elige una carpeta nueva o vacía.
+
+### Aplicar se detuvo con "Hay que reiniciar antes de seguir"
+
+Es lo esperado tras activar características como WSL o Hyper-V. Reinicia e inicia sesión **con el mismo usuario**: la tarea programada `WinMudanza-Continuar` abre una ventana y sigue. Si no arranca, ejecuta a mano lo que indica el mensaje (`-Accion Aplicar -Solo ...`). Para no detenerse: `-SinReiniciar` o `ContinuarTrasReinicio = $false`.
+
+### Usuarios: no pide la contraseña
+
+Con `-SinConfirmar` no se pregunta nada: escribe la contraseña en `usuarios.psd1` o ejecuta sin `-SinConfirmar`.
+
+### Wifi: "sin contraseña"
+
+Extrae como Administrador (`WinMudanza.cmd`): sin elevación Windows no entrega las contraseñas de las redes.
+
+### Impresoras: "instala el controlador …"
+
+La impresora IP necesita un controlador que Windows no trae. Instálalo (web del fabricante o winget) y ejecuta `-Solo Impresoras`.
+
+### Desarrollo: SSH dice "UNPROTECTED PRIVATE KEY FILE" o "bad permissions"
+
+Vuelve a ejecutar `-Solo Desarrollo` (ajusta permisos al copiar) o, a mano: `icacls $env:USERPROFILE\.ssh\id_xxx /inheritance:r /grant:r "$env:USERNAME:F"`.
+
+### PowerShell: "no se puede cargar el archivo … no está firmado digitalmente"
+
+Con `RemoteSigned`, los scripts descargados de internet deben desbloquearse: clic derecho → *Propiedades* → *Desbloquear*, o `Unblock-File .\script.ps1`.
+
+### Características: "no existe en esta edición de Windows"
+
+La edición de destino no la incluye (por ejemplo, Hyper-V y Sandbox no existen en Windows Home). Se salta; el resto continúa.
+
+### Características: falla al activar Hyper-V o Sandbox
+
+Activa la virtualización en la BIOS/UEFI (Intel VT-x o AMD SVM) y vuelve a ejecutar `-Solo Caracteristicas`. Comprueba con `(Get-CimInstance Win32_Processor).VirtualizationFirmwareEnabled`.
+
 ### Usuarios: "falta la contraseña en usuarios.psd1"
 
 Cambia `Password = 'CAMBIAR'` por la contraseña real (o `''` para sin contraseña) y vuelve a ejecutar `-Solo Usuarios`.
@@ -91,7 +131,7 @@ Steam sincroniza las colecciones con su nube y la versión de la nube manda. Nor
 
 ### Steam: deshacer cambios
 
-Cada archivo sobrescrito tiene su copia `*.ohp2.bak` (o la carpeta `cloudstorage.ohp2.bak`) en `Steam\userdata\<cuenta>\config\`. Con Steam cerrado, renombra la copia al nombre original.
+Cada archivo sobrescrito tiene su copia `*.wmud.bak` (o la carpeta `cloudstorage.wmud.bak`) en `Steam\userdata\<cuenta>\config\`. Con Steam cerrado, renombra la copia al nombre original.
 
 ### ¿Dónde veo qué se cambió exactamente?
 
