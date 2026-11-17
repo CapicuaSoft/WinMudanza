@@ -11,6 +11,8 @@ WinMudanza/
   modulos/*.ps1         Un archivo por módulo
   modulos/<Módulo>/     Hijos de un módulo (solo los usa ese módulo):
     Ajustes/NN_*.ps1    Un archivo por grupo de ajustes
+    Carpetas/Carpetas.psm1  Carpetas personales y sus valores de User Shell Folders
+    Paquetes/Winget.psm1    Busqueda en winget (lee la tabla de winget search)
     Steam/Vdf.psm1      VDF de Steam: binario (shortcuts.vdf) y texto (localconfig.vdf)
   pruebas/              Comprobación de sintaxis y lanzador de Windows Sandbox
   ejemplos/             .psd1 de ejemplo con datos ficticios

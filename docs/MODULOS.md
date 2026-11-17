@@ -1,8 +1,8 @@
 # Módulos
 
-Orden de ejecución al aplicar: **Ajustes → Wifi → Características → Usuarios → Compartidas → Unidades de red → Impresoras → Hosts → Paquetes → Office → Entorno → Desarrollo → UniGetUI → Steam**.
+Orden de ejecución al aplicar: **Ajustes → Wifi → Características → Usuarios → Carpetas → Compartidas → Unidades de red → Impresoras → Hosts → Paquetes → Office → Menús → Entorno → Desarrollo → UniGetUI → Navegadores → Outlook → Tareas → Steam**.
 
-Los módulos que tienen bloque `Revisar` (Usuarios, Compartidas, Steam) participan en la **revisión antes de formatear** (`-Accion Revisar` y al final de Extraer).
+Los módulos que tienen bloque `Revisar` (Usuarios, Carpetas, Compartidas, Outlook, Tareas, Steam) participan en la **revisión antes de formatear** (`-Accion Revisar` y al final de Extraer).
 
 Todos los módulos son **repetibles**: lo que ya está aplicado se salta, así que se pueden volver a ejecutar para completar pendientes.
 
@@ -79,6 +79,22 @@ Módulo `Caracteristicas`: las de *Activar o desactivar las características de 
 
 ---
 
+## Carpetas
+
+**Extrae:** de cada perfil, las carpetas personales (Escritorio, Documentos, Descargas, Música, Imágenes, Vídeos, Favoritos) que apuntan **fuera** de la carpeta del usuario, por ejemplo Descargas en `D:\Downloads`. Las que están en su sitio por defecto o en OneDrive no se guardan (OneDrive las vuelve a mover él solo al iniciar sesión).
+
+**Aplica:** escribe la nueva ubicación en `User Shell Folders` del perfil (los dos valores que usa Windows para cada carpeta) y crea la carpeta de destino si falta. **No mueve archivos.** El usuario lo ve al volver a iniciar sesión.
+
+**Depende de:** Usuarios (el usuario debe tener perfil).
+
+**Revisar:** avisa si alguna carpeta está en C: fuera del perfil (se borrará al formatear).
+
+**Limitaciones:**
+- Un usuario sin perfil todavía (por ejemplo, una cuenta Microsoft que aún no ha iniciado sesión) queda como pendiente: inicia sesión con él una vez y ejecuta `-Solo Carpetas`.
+- Si la unidad de destino no existe (por ejemplo, no hay `D:`), da error y no cambia esa carpeta.
+
+---
+
 ## Compartidas
 
 **Extrae:** recursos compartidos (excepto los administrativos `C$`, `ADMIN$`, `IPC$`, `print$`…), sus permisos de recurso y los permisos NTFS **explícitos** de cada carpeta.
@@ -138,6 +154,15 @@ Módulo `Caracteristicas`: las de *Activar o desactivar las características de 
 
 **Aplica:** instala en ese orden lo que no esté instalado. Tras winget recarga el `PATH`, así que puede usar Node/Python/.NET recién instalados.
 
+**Para todos los usuarios:** winget instala con `--scope machine`. Si el paquete no tiene instalador para todos los usuarios (error `0x8A150010`), lo instala para el usuario que ejecuta WinMudanza y lo avisa en el resumen. Al extraer se listan los programas que hoy están instalados solo para un usuario. npm y dotnet tool siguen siendo por usuario; los módulos de PowerShell ya se instalan para todos (`-Scope AllUsers`).
+
+**Chocolatey y Scoop:** winget ya reconoce muchos programas instalados con ellos (por el registro de programas instalados) y esos entran en la lista normal. Para el resto, Extraer busca el equivalente en winget por nombre y lo escribe **comentado** al final de la lista de winget, con el paquete de origen:
+
+```powershell
+# 'Notepad++.Notepad++'    # sugerido para Chocolatey 'notepadplusplus': quita el # para instalarlo
+# sin equivalente claro en winget: Scoop 'miherramienta' (busca: winget search "miherramienta")
+```
+
 **Limitaciones:**
 - Programas que winget no reconoce (juegos, drivers, instaladores manuales) no se reinstalan: quedan en `paquetes_no_reinstalables.txt`.
 - Siempre instala la **última versión**.
@@ -164,6 +189,31 @@ Módulo `Caracteristicas`: las de *Activar o desactivar las características de 
 - Necesita internet: descarga unos 3 GB y tarda entre 10 y 30 minutos.
 - No cambia una instalación existente (por ejemplo, no añade ni quita aplicaciones excluidas). Para eso, desinstala Office y vuelve a aplicar.
 - Las licencias por volumen (KMS/MAK) no se configuran.
+
+---
+
+## Menus
+
+**Extrae:** nada (se activa en la sección `Menus` de `config\ajustes.psd1`).
+
+**Aplica:** después de Paquetes, añade los menús contextuales del Explorador que winget no añade (instala en silencio sin las opciones de menú del instalador). Solo los de los programas que estén instalados:
+
+| Menú | Dónde | Qué hace |
+|---|---|---|
+| **Abrir en Claude** | Carpeta, fondo de carpeta, unidad | Abre Claude Code (`claude`) en esa carpeta, en Windows Terminal si está instalado y si no en PowerShell |
+| **Abrir con Code** | Archivo, carpeta, fondo de carpeta, unidad | Abre VS Code, como el instalador clásico |
+| **Buscar con Everything...** | Carpeta, fondo de carpeta, unidad | Abre Everything buscando en esa carpeta |
+| **WinMerge** | Archivos y carpetas | Registra la extensión del Explorador de WinMerge (`ShellExtensionX64.dll`) y la activa en todos los perfiles |
+
+- Programa instalado para todos los usuarios → menú en `HKLM` (todos los usuarios). Instalado solo para el usuario → en su `HKCU`.
+- Si ya hay otra entrada que abre ese programa (por ejemplo, la que crea el instalador de Everything), no se duplica.
+- Si el usuario tiene una entrada antigua con el mismo nombre que apunta a otra ruta (por ejemplo, un VS Code desinstalado), se corrige.
+
+**Depende de:** Paquetes.
+
+**Limitaciones:**
+- Con el menú contextual moderno de Windows 11 aparecen en «Mostrar más opciones»; con el menú clásico (ajuste 01), directamente.
+- WinMerge: su extensión solo se muestra si `ContextMenuEnabled` está activado en el usuario; se activa en los perfiles que no tengan ese valor y no se cambia si ya existe.
 
 ---
 
@@ -209,6 +259,51 @@ No extrae: historial de operaciones, cachés, telemetría, tamaño de ventana ni
 **Limitaciones:**
 - UniGetUI debe estar **cerrado** (también en la bandeja del sistema).
 - Las opciones se añaden; no se desactivan opciones que ya estén activas en destino (salvo los gestores, que se escriben completos).
+
+---
+
+## Navegadores
+
+**Extrae:** de cada perfil de Windows, los favoritos de cada perfil de **Edge, Chrome, Brave, Vivaldi y Opera** (archivo `Bookmarks`) a `config\navegadores\<usuario>\<navegador>\<perfil>\`, y al lado un `favoritos.html` que cualquier navegador puede importar. De **Firefox** guarda la última copia de `bookmarkbackups\` (`.jsonlz4`).
+
+**Aplica:** si el navegador está instalado y ese perfil no tiene favoritos, los restaura. Si ya tiene (por ejemplo, porque ha sincronizado la cuenta), **no los toca**; si tiene menos de los guardados, deja como pendiente importar `favoritos.html`. Firefox queda siempre como pendiente, con la ruta del archivo para restaurarlo desde el propio Firefox (Ctrl+Mayús+O > Importar y respaldar > Restaurar).
+
+**Depende de:** Usuarios y Paquetes (el navegador debe estar instalado).
+
+**Limitaciones:**
+- Los navegadores deben estar **cerrados**; si uno está abierto, se avisa y se salta.
+- Solo favoritos: no historial, contraseñas ni extensiones (para eso, la sincronización de cada navegador).
+- Un navegador que no esté instalado, o un usuario sin perfil todavía, queda como pendiente.
+
+---
+
+## Outlook
+
+Outlook clásico (Microsoft 365 / Office 2016 o posterior). Windows no permite trasladar las contraseñas, y copiar el perfil de Outlook del registro a otro equipo no es fiable, así que:
+
+**Extrae:** de cada perfil de Windows, las cuentas de cada perfil de Outlook (email, tipo y, en IMAP/POP, servidores, puertos y SSL), los archivos de datos `.pst` y las **firmas** (`%APPDATA%\Microsoft\Signatures`) a `config\outlook\<usuario>\Firmas`. Los `.ost` no se guardan: son una copia del servidor que Outlook vuelve a descargar.
+
+**Aplica:** copia las firmas que falten y deja como **pendiente** la lista de cuentas para añadirlas en Outlook (Archivo > Agregar cuenta) y los `.pst` para volver a abrirlos. Exchange, Microsoft 365, Outlook.com y Gmail solo piden el email e iniciar sesión.
+
+**Depende de:** Usuarios y Office.
+
+**Revisar:** avisa de los `.pst` que estén en C:.
+
+---
+
+## Tareas
+
+**Extrae:** las tareas programadas de las carpetas del Programador de tareas indicadas en `CarpetasTareas` de `perfil.psd1` (por defecto `\Personal\`). Cada tarea se guarda completa en `config\tareas\<carpeta>\<nombre>.xml`. Las cuentas de usuario (que cambian de SID al reinstalar) se guardan por nombre.
+
+**Aplica:** registra las tareas que no existan, con la cuenta resuelta en el equipo nuevo, y las deja activadas o desactivadas como estaban. Las que ya existen no se tocan.
+
+**Depende de:** Usuarios (la cuenta de la tarea debe existir).
+
+**Revisar:** avisa si una tarea ejecuta un programa que está en C: fuera de Windows y de Archivos de programa (por ejemplo `C:\Tools\...`), porque se borrará al formatear.
+
+**Limitaciones:**
+- Si la cuenta de la tarea aún no existe (cuenta Microsoft sin iniciar sesión), queda como pendiente: inicia sesión con ella y ejecuta `-Solo Tareas`.
+- Las tareas que se ejecutan «aunque el usuario no haya iniciado sesión» **con contraseña guardada** no se pueden restaurar sin ella: quedan como pendientes, para importarlas a mano desde su `.xml`. Las que no guardan contraseña (opción «No almacenar contraseña») sí se restauran.
 
 ---
 

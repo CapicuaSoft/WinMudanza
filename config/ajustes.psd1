@@ -90,4 +90,14 @@
         Tls12              = $true                 # PowerShell 5.1 descarga siempre con TLS 1.2+
         DobleClicEjecuta   = $true                 # doble clic en .ps1 lo ejecuta (Editar sigue en el clic derecho)
     }
+
+    # Modulo Menus (se ejecuta despues de Paquetes): menus contextuales que winget no anade.
+    # Solo se anade el de los programas que esten instalados.
+    Menus = @{
+        Activo     = $true
+        ClaudeCode = $true                         # "Abrir en Claude" en carpetas (Claude Code en Windows Terminal)
+        VSCode     = $true                         # "Abrir con Code" en archivos y carpetas
+        Everything = $true                         # "Buscar con Everything..." en carpetas
+        WinMerge   = $true                         # extension del Explorador de WinMerge (comparar archivos/carpetas)
+    }
 }

@@ -38,6 +38,10 @@ Se crea `config\` con:
 | `compartidas.psd1` | Recursos compartidos y permisos |
 | `unidadesred.psd1` | Unidades de red mapeadas |
 | `impresoras.psd1` | Impresoras de red / IP y la predeterminada |
+| `carpetas.psd1` | Carpetas personales fuera de su sitio (p. ej. Descargas en `D:`) |
+| `tareas.psd1` + `tareas\` | Tareas programadas de `\Personal\` |
+| `navegadores.psd1` + `navegadores\` | Favoritos de cada navegador (y `favoritos.html` para importar a mano) |
+| `outlook.psd1` + `outlook\` | Cuentas de Outlook (informativo), `.pst` y firmas |
 | `hosts.psd1` | Entradas personalizadas de `hosts` |
 | `paquetes.psd1` | Listas de winget, npm, pip, dotnet tool, PowerShell |
 | `paquetes_no_reinstalables.txt` | Mensajes de winget: programas que no podrá reinstalar |
@@ -94,11 +98,13 @@ Todos los campos están explicados en [CONFIGURACION.md](CONFIGURACION.md).
 
 El resumen final lista lo que hay que hacer a mano. Lo habitual:
 
-- **Cuentas Microsoft**: inicia sesión con ellas en el equipo nuevo. Después, vuelve a ejecutar para asignar grupos, permisos y ajustes a sus perfiles:
+- **Cuentas Microsoft**: inicia sesión con ellas en el equipo nuevo. Después, vuelve a ejecutar para asignar grupos, permisos, carpetas, ajustes y tareas a sus perfiles:
   ```powershell
-  .\WinMudanza.ps1 -Accion Aplicar -Solo Usuarios,Compartidas,Ajustes
+  .\WinMudanza.ps1 -Accion Aplicar -Solo Usuarios,Carpetas,Compartidas,Ajustes,Navegadores,Outlook,Tareas
   ```
 - **Office**: abre Word e inicia sesión con la cuenta que tiene la suscripción.
+- **Outlook**: añade cada cuenta de la lista de pendientes (Archivo > Agregar cuenta) y vuelve a abrir los `.pst`.
+- **Favoritos**: si un navegador ya tenía favoritos, o es Firefox, el pendiente indica el archivo que hay que importar.
 - **Steam**: instálalo (o deja que lo instale winget), inicia sesión, **ciérralo** y ejecuta `-Solo Steam`.
 - **Juegos no-Steam / emuladores**: restaura sus carpetas a la misma ruta (o cambia `Exe`/`StartDir` en `steam.psd1`).
 - **Desarrollo, unidades de red, impresora predeterminada, variables de usuario**: se aplican al usuario que ejecuta WinMudanza. Para otro usuario, inicia sesión con él y ejecuta `-Solo Desarrollo,UnidadesRed,Impresoras,Entorno`.
@@ -136,7 +142,7 @@ Al elegir 1, 4, 5 o 6 se muestra la lista de módulos marcada según `perfil.psd
 | `-SinConfirmar` | No pregunta nada: ni confirmación, ni contraseñas (los usuarios en `'CAMBIAR'` darán error), ni reiniciar. |
 | `-SinReiniciar` | Aplica todos los módulos seguidos aunque alguno necesite reiniciar. |
 
-Módulos: `Ajustes`, `Wifi`, `Caracteristicas`, `Usuarios`, `Compartidas`, `UnidadesRed`, `Impresoras`, `Hosts`, `Paquetes`, `Office`, `Entorno`, `Desarrollo`, `UniGetUI`, `Steam`.
+Módulos: `Ajustes`, `Wifi`, `Caracteristicas`, `Usuarios`, `Carpetas`, `Compartidas`, `UnidadesRed`, `Impresoras`, `Hosts`, `Paquetes`, `Office`, `Menus`, `Entorno`, `Desarrollo`, `UniGetUI`, `Navegadores`, `Outlook`, `Tareas`, `Steam`.
 
 Ejemplos:
 

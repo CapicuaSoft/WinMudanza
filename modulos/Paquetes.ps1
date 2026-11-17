@@ -46,6 +46,65 @@
             Write-Aviso 'winget no esta disponible'
         }
 
+        # ---------- Programas instalados solo para un usuario ----------
+        # Al aplicar, winget intenta instalarlos para todos (--scope machine).
+        $porUsuario = @()
+        foreach ($h in Get-ChildItem -LiteralPath 'Registry::HKEY_USERS' -ErrorAction SilentlyContinue | Where-Object { $_.PSChildName -match '^S-1-5-21-[\d-]+$' }) {
+            foreach ($k in Get-ChildItem -LiteralPath "$($h.PSPath)\Software\Microsoft\Windows\CurrentVersion\Uninstall" -ErrorAction SilentlyContinue) {
+                $p = Get-ItemProperty -LiteralPath $k.PSPath -ErrorAction SilentlyContinue
+                if ($p.DisplayName -and -not $p.SystemComponent) { $porUsuario += [string]$p.DisplayName }
+            }
+        }
+        $porUsuario = @($porUsuario | Sort-Object -Unique)
+        if ($porUsuario.Count -gt 0) {
+            Write-Info "Instalados solo para un usuario (al aplicar se instalaran para todos si el paquete lo permite): $($porUsuario -join ', ')"
+        }
+
+        # ---------- Chocolatey / Scoop -> winget ----------
+        # Lo que winget ya reconoce (por el registro de programas) ya esta en la lista.
+        # Para el resto se busca el equivalente en winget y se sugiere comentado en paquetes.psd1.
+        $otros = @()
+        $dirChoco = $env:ChocolateyInstall
+        if (-not $dirChoco) { $dirChoco = Join-Path $env:ProgramData 'chocolatey' }
+        foreach ($n in Get-ChildItem -Path (Join-Path $dirChoco 'lib\*\*.nuspec') -ErrorAction SilentlyContinue) {
+            try { $x = [xml](Get-Content -LiteralPath $n.FullName -Raw -Encoding UTF8) } catch { continue }
+            $id = [string]$x.package.metadata.id
+            if (-not $id -or $id -match '^(chocolatey|chocolatey-.*|.*\.extension|KB\d+)$') { continue }
+            $titulo = [string]$x.package.metadata.title
+            if (-not $titulo) { $titulo = $id -replace '\.(install|portable)$', '' }
+            $otros += [pscustomobject]@{ Gestor = 'Chocolatey'; Paquete = $id; Nombre = $titulo }
+        }
+        $dirsScoop = @((Join-Path $env:USERPROFILE 'scoop\apps'), (Join-Path $env:ProgramData 'scoop\apps'))
+        if ($env:SCOOP) { $dirsScoop += (Join-Path $env:SCOOP 'apps') }
+        foreach ($d in $dirsScoop | Select-Object -Unique) {
+            foreach ($a in Get-ChildItem -LiteralPath $d -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne 'scoop' }) {
+                $otros += [pscustomobject]@{ Gestor = 'Scoop'; Paquete = $a.Name; Nombre = $a.Name }
+            }
+        }
+        # Sin duplicados (git e git.install son el mismo programa)
+        $otros = @($otros | Group-Object { $_.Gestor + '|' + ($_.Paquete -replace '\.(install|portable)$', '') } | ForEach-Object { $_.Group[0] })
+        $sugeridos = @()
+        if ($otros.Count -gt 0 -and (Test-Comando 'winget')) {
+            Write-Info "Buscando en winget el equivalente de $($otros.Count) paquetes de Chocolatey/Scoop..."
+            $enWinget = @{}
+            foreach ($w in $winget) { $enWinget[$w.ToLower()] = $true }
+            foreach ($o in $otros) {
+                $res = @(Find-WingetPaquete $o.Nombre)
+                $elegido = $res | Where-Object { $_.Nombre -eq $o.Nombre } | Select-Object -First 1
+                if (-not $elegido -and $res.Count -eq 1) { $elegido = $res[0] }
+                $origen = "$($o.Gestor) '$($o.Paquete)'"
+                if (-not $elegido) {
+                    $sugeridos += "# sin equivalente claro en winget: $origen (busca: winget search `"$($o.Nombre)`")"
+                    Write-Aviso "${origen}: sin equivalente claro en winget"
+                } elseif ($enWinget.ContainsKey($elegido.Id.ToLower())) {
+                    Write-Omitido "$origen -> $($elegido.Id) (ya en la lista)"
+                } else {
+                    $sugeridos += ("# '{0}'    # sugerido para {1}: quita el # para instalarlo" -f $elegido.Id, $origen)
+                    Write-Ok "$origen -> $($elegido.Id) (sugerido, comentado en paquetes.psd1)"
+                }
+            }
+        }
+
         # ---------- npm ----------
         $npm = @()
         if (Test-Comando 'npm') {
@@ -87,8 +146,12 @@
             Write-Ok "PowerShell: $($psmod.Count) modulos"
         } catch { Write-Omitido 'Sin modulos instalados con Install-Module' }
 
+        # Marcador que se sustituye por las sugerencias comentadas (Write-Psd1 no escribe comentarios)
+        $marca = 'WMUD_SUGERIDOS'
+        $listaWinget = @($winget)
+        if ($sugeridos.Count -gt 0) { $listaWinget += $marca }
         $datos = [ordered]@{
-            Winget     = [ordered]@{ Activo = $true; Paquetes = $winget }
+            Winget     = [ordered]@{ Activo = $true; Paquetes = $listaWinget }
             Npm        = [ordered]@{ Activo = $true; Paquetes = $npm }
             Pip        = [ordered]@{ Activo = $true; Paquetes = $pip }
             DotnetTool = [ordered]@{ Activo = $true; Paquetes = $dotnet }
@@ -101,9 +164,21 @@
             'Activo = $false desactiva un gestor completo.'
             'Para no instalar un paquete, comenta su linea con # o borrala.'
             'Se instala la ultima version disponible. Los que ya esten instalados se saltan.'
+            'winget instala para todos los usuarios si el paquete lo permite; si no, para el usuario que ejecuta.'
+            'Al final de Winget pueden ir comentados equivalentes de lo instalado con Chocolatey o Scoop.'
             'Orden al aplicar: Winget -> Npm -> Pip -> DotnetTool -> PowerShell'
             '(winget instala Node, Python o .NET si estan en su lista, y luego se usan).'
         )
+        if ($sugeridos.Count -gt 0) {
+            $texto = [IO.File]::ReadAllText($ruta, [Text.Encoding]::UTF8)
+            $m = [regex]::Match($texto, "(?m)^([ ]*)'$marca'(?=\r?$)")
+            if ($m.Success) {
+                $ind = $m.Groups[1].Value
+                $lineas = ($sugeridos | ForEach-Object { $ind + $_ }) -join "`r`n"
+                $texto = $texto.Remove($m.Index, $m.Length).Insert($m.Index, $lineas)
+                [IO.File]::WriteAllText($ruta, $texto, (New-Object System.Text.UTF8Encoding $true))
+            }
+        }
         Write-Info "-> $ruta"
     }
 
@@ -143,8 +218,16 @@
                 if ($officeAparte -and $id -like 'Microsoft.Office') { Write-Omitido "$etiqueta (lo instala el modulo Office)"; continue }
                 if ($instalados.ContainsKey($id.ToLower())) { Write-Omitido "$etiqueta (ya instalado)"; continue }
                 $null = Invoke-Cambio $etiqueta {
-                    $out = & winget install --id $id -e --source winget --silent --accept-package-agreements --accept-source-agreements --disable-interactivity 2>&1
+                    $comunes = @('--id', $id, '-e', '--source', 'winget', '--silent', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
+                    # Para todos los usuarios si el paquete lo permite
+                    $out = & winget install @comunes --scope machine 2>&1
                     $codigo = $LASTEXITCODE
+                    # 0x8A150010 no hay instalador para todos los usuarios: se instala para el usuario actual
+                    if ($codigo -eq -1978335216) {
+                        $out = & winget install @comunes 2>&1
+                        $codigo = $LASTEXITCODE
+                        if ($codigo -eq 0) { Write-Aviso "${id}: no tiene instalador para todos los usuarios; instalado solo para $env:USERNAME" }
+                    }
                     # 0x8A150061 ya instalado, 0x8A15002B sin actualizacion aplicable
                     if ($codigo -eq 0 -or $codigo -eq -1978335135 -or $codigo -eq -1978335189) { return }
                     if ($codigo -eq 3010 -or $codigo -eq 1641) { Write-Aviso "${id}: requiere reiniciar"; return }

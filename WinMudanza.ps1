@@ -91,7 +91,7 @@ param(
 
 $ErrorActionPreference = 'Continue'
 $Raiz = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Version = '3.0.0'
+$Version = '1.0.0'
 $TareaContinuar = 'WinMudanza-Continuar'
 
 # Librerias comunes (lib\) y librerias propias de cada modulo (modulos\<Modulo>\*.psm1)
@@ -284,6 +284,7 @@ function Invoke-Accion([string]$Acc, [string[]]$Seleccion, [bool]$Simular) {
         Accion     = $accionReal
         Version    = $Version
         Seleccion  = $Seleccion
+        Perfil     = $Perfil
         Interactivo = (-not $SinConfirmar) -and [Environment]::UserInteractive
     }
 

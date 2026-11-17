@@ -114,7 +114,10 @@
                 })
                 foreach ($k in $privadas) {
                     $null = Invoke-Cambio "SSH: permisos solo para $env:USERNAME en $(Split-Path $k -Leaf)" {
-                        $out = & icacls.exe $k /inheritance:r /grant:r "${env:USERNAME}:F" /setowner $env:USERNAME 2>&1
+                        # icacls no admite /setowner junto a /grant: dos llamadas
+                        $out = & icacls.exe $k /inheritance:r /grant:r "${env:USERNAME}:F" 2>&1
+                        if ($LASTEXITCODE -ne 0) { throw (($out | ForEach-Object { [string]$_ }) -join ' ') }
+                        $out = & icacls.exe $k /setowner $env:USERNAME 2>&1
                         if ($LASTEXITCODE -ne 0) { throw (($out | ForEach-Object { [string]$_ }) -join ' ') }
                     } -Silencioso
                 }

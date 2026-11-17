@@ -182,7 +182,7 @@
                 Write-Info "$($ms.Nombre) (cuenta Microsoft) ya existe en este equipo: se ajustan sus grupos"
                 Set-Grupos $ms.Nombre $ms.Grupos
             } else {
-                Add-Pendiente ("Cuenta Microsoft '{0}': inicia sesion con su email y vuelve a ejecutar -Solo Usuarios,Compartidas,Ajustes (grupos: {1})" -f $ms.Nombre, ($ms.Grupos -join ', '))
+                Add-Pendiente ("Cuenta Microsoft '{0}': inicia sesion con su email y vuelve a ejecutar -Solo Usuarios,Carpetas,Compartidas,Ajustes,Navegadores,Outlook,Tareas (grupos: {1})" -f $ms.Nombre, ($ms.Grupos -join ', '))
             }
         }
     }

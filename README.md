@@ -41,14 +41,19 @@ Las contraseñas de los usuarios locales se piden por pantalla al aplicar (o pue
 | **Wifi** | Redes Wi-Fi guardadas con su contraseña | Las añade para todos los usuarios |
 | **Características** | Características de Windows activadas (Hyper-V, WSL, Sandbox, .NET 3.5…) | Activa las que falten (nunca desactiva) |
 | **Usuarios** | Usuarios locales y grupos | Crea usuarios y asigna grupos |
+| **Carpetas** | Descargas, Documentos, Música… de cada usuario que no están en su sitio (p. ej. en `D:`) | Las vuelve a apuntar ahí (no mueve archivos) |
 | **Compartidas** | Recursos compartidos y permisos NTFS | Crea carpetas, las comparte y aplica permisos |
 | **UnidadesRed** | Unidades de red mapeadas | Las vuelve a mapear |
 | **Impresoras** | Impresoras de red / IP y la predeterminada | Las vuelve a añadir |
 | **Hosts** | Entradas personalizadas de `hosts` | Añade las que falten |
-| **Paquetes** | winget, npm, pip, dotnet tool, módulos PowerShell | Los reinstala |
+| **Paquetes** | winget, npm, pip, dotnet tool, módulos PowerShell; sugiere el equivalente en winget de lo instalado con Chocolatey/Scoop | Los reinstala (winget, para todos los usuarios si se puede) |
 | **Office** | Producto, idioma, canal y apps excluidas de Microsoft 365 | Lo instala en silencio con la herramienta oficial de Microsoft |
+| **Menus** | — (se configura en `config\ajustes.psd1`) | Menús contextuales que winget no añade: «Abrir en Claude», «Abrir con Code», Everything, WinMerge |
 | **Entorno** | Variables de entorno y PATH personalizados | Crea las que falten |
 | **Desarrollo** | `.gitconfig`, `.ssh`, perfil de PowerShell, Windows Terminal, VS Code | Los restaura |
+| **Navegadores** | Favoritos de Edge, Chrome, Brave, Vivaldi, Opera y Firefox de cada usuario | Los restaura si el navegador no tiene; si no, deja un HTML para importar |
+| **Outlook** | Cuentas de correo, archivos `.pst` y firmas de Outlook clásico | Copia las firmas; las cuentas quedan como pendientes (solo piden email) |
+| **Tareas** | Tareas programadas de la carpeta `\Personal\` del Programador de tareas | Registra las que falten |
 | **UniGetUI** | Gestores activos, opciones, opciones de instalación | Las aplica a todos los usuarios |
 | **Steam** | Imágenes, juegos no-Steam, colecciones, opciones de lanzamiento | Las restaura (Steam se instala a mano) |
 

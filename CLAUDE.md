@@ -47,7 +47,11 @@ Ver `docs\DESARROLLO.md`. Resumen:
 - Paquetes: winget (solo fuente winget) + npm, pip, dotnet tool, módulos PowerShell.
 - Ajustes de usuario, UniGetUI: todos los perfiles + Default. Steam: cuentas detectadas; Steam y emuladores se instalan a mano.
 - Edge: si las directivas obligatorias no aplican sin dominio, usar `TipoDirectiva = 'Recomendada'`.
-- v3 (pedido del usuario): Revisar antes de formatear, Copiar fuera de C: (`CopiarA = 'D:\WinMudanza'`), lanzador `.cmd`, continuar tras reiniciar, contraseñas por pantalla, Comparar, Sandbox automático; módulos Wifi, UnidadesRed, Impresoras, Hosts, Entorno, Desarrollo; ajuste 06 PowerShell (RemoteSigned, NuGet+PSGallery, TLS 1.2, doble clic). Wi-Fi y claves SSH en texto plano en `config\` (como las contraseñas).
+- Versión 1.0.0 (aún sin publicar; numeración desde 1.0.0). Incluye, a pedido del usuario: Revisar antes de formatear, Copiar fuera de C: (`CopiarA = 'D:\WinMudanza'`), lanzador `.cmd`, continuar tras reiniciar, contraseñas por pantalla, Comparar, Sandbox automático; módulos Wifi, UnidadesRed, Impresoras, Hosts, Entorno, Desarrollo; ajuste 06 PowerShell (RemoteSigned, NuGet+PSGallery, TLS 1.2, doble clic). Wi-Fi y claves SSH en texto plano en `config\` (como las contraseñas).
 - Características de Windows: solo activar, nunca desactivar. Sin capacidades (OpenSSH, Paint, idiomas…) ni distribuciones de WSL.
 - Office: módulo propio con la Office Deployment Tool, instalación silenciosa; activación manual. `C:\Proyectos\InstalarOffice` queda intacto como referencia.
 - Ejecución por menú y por parámetros; formato `.psd1`; git solo local.
+- Paquetes: winget con `--scope machine` y, si no hay instalador para todos (`0x8A150010`), por usuario con aviso. npm y dotnet tool se quedan por usuario. Lo de Chocolatey/Scoop que winget no reconoce se sugiere **comentado** en `paquetes.psd1`.
+- Módulo Menus (tras Paquetes, config en `ajustes.psd1` sección `Menus`): «Abrir en Claude» (Claude Code), VS Code, Everything, WinMerge. Sin menú de Claude Desktop (probado: `claude-desktop.exe` no abre carpetas).
+- Módulos Navegadores (favoritos Chromium + Firefox, todos los perfiles; solo se restauran si el perfil del navegador está vacío, si no HTML como pendiente) y Outlook (firmas; cuentas y .pst solo como pendientes: no se copia el perfil ni contraseñas).
+- Módulos Carpetas (User Shell Folders fuera del perfil y no OneDrive; no mueve archivos) y Tareas (carpetas de `CarpetasTareas` en `perfil.psd1`, por defecto `\Personal\`; cuentas por nombre).

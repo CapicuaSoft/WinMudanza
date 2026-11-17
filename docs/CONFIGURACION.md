@@ -57,8 +57,9 @@ Además, `perfil.psd1` tiene:
 |---|---|
 | `CopiarA` | Carpeta fuera de C: donde Extraer copia WinMudanza con su configuración al terminar, y destino por defecto de `-Accion Copiar` (p. ej. `'D:\WinMudanza'`). Vacío = no copiar. |
 | `ContinuarTrasReinicio` | `$true`: si un módulo necesita reiniciar, Aplicar se detiene, programa la tarea `WinMudanza-Continuar` y sigue al volver a iniciar sesión. `$false`: aplica todo seguido y deja el reinicio como pendiente. |
+| `CarpetasTareas` | Carpetas del Programador de tareas que guarda y restaura el módulo Tareas. Por defecto `@('\Personal\')`. |
 
-Módulos nuevos en `Modulos`: `Wifi`, `UnidadesRed`, `Impresoras`, `Hosts`, `Entorno`, `Desarrollo`.
+Otros módulos en `Modulos`: `Wifi`, `Carpetas`, `UnidadesRed`, `Impresoras`, `Hosts`, `Menus` (sin Extraer), `Entorno`, `Desarrollo`, `Navegadores`, `Outlook`, `Tareas`.
 
 ---
 
@@ -107,6 +108,18 @@ No se extrae: lo defines tú. Cada sección tiene `Activo` y sus opciones. Los a
 | `NuGetYGaleria` | Instala el proveedor NuGet y marca PowerShell Gallery como de confianza: `Install-Module` sin preguntas. |
 | `Tls12` | .NET Framework usa siempre TLS 1.2+ (evita errores de descarga en PowerShell 5.1). |
 | `DobleClicEjecuta` | Doble clic en un `.ps1` lo ejecuta con PowerShell (antes abría el Bloc de notas). *Editar* sigue en el clic derecho. |
+
+### Sección `Menus` (módulo Menus)
+
+La usa el módulo **Menus**, que se ejecuta después de Paquetes. Cada menú se añade solo si el programa está instalado.
+
+| Campo | Descripción |
+|---|---|
+| `Activo` | `$false` desactiva el módulo entero. |
+| `ClaudeCode` | «Abrir en Claude» en carpetas: Claude Code en Windows Terminal (o PowerShell). |
+| `VSCode` | «Abrir con Code» en archivos y carpetas. |
+| `Everything` | «Buscar con Everything...» en carpetas. |
+| `WinMerge` | Extensión del Explorador de WinMerge (comparar archivos y carpetas). |
 
 ---
 
@@ -197,6 +210,89 @@ Las cuentas locales se buscan **por nombre** (su SID cambia al reinstalar). Las 
 
 ---
 
+## `config\carpetas.psd1`
+
+```powershell
+@{
+    Usuarios = @{
+        ana = @{ Descargas = 'D:\Descargas'; Musica = 'D:\Musica' }
+    }
+}
+```
+
+Carpetas válidas: `Escritorio`, `Documentos`, `Descargas`, `Musica`, `Imagenes`, `Videos`, `Favoritos`. Solo se guardan las que no están en su sitio por defecto ni en OneDrive. Al aplicar no se mueve ningún archivo.
+
+---
+
+## `config\tareas.psd1` + `config\tareas\`
+
+```powershell
+@{
+    Tareas = @(
+        @{ Carpeta = '\Personal\'; Nombre = 'Copia nocturna'; Archivo = 'Personal\Copia nocturna.xml'; Cuentas = @('ana'); Activa = $true }
+    )
+}
+```
+
+| Campo | Descripción |
+|---|---|
+| `Carpeta`, `Nombre` | Dónde se registra la tarea en el Programador de tareas. |
+| `Archivo` | XML de la tarea dentro de `config\tareas\` (se puede editar, p. ej. para cambiar la ruta de un programa). |
+| `Cuentas` | Usuarios de la tarea, por nombre (informativo: los nombres están dentro del XML). |
+| `Activa` | `$false` la registra desactivada. |
+
+Para no restaurar una tarea, borra o comenta su bloque.
+
+---
+
+## `config
+avegadores.psd1` + `config
+avegadores\`
+
+```powershell
+@{
+    Favoritos = @(
+        @{ Usuario = 'ana'; Navegador = 'Edge'; Perfil = 'Default'; Carpeta = 'ana\Edge\Default'; Favoritos = 120 }
+        @{ Usuario = 'ana'; Navegador = 'Firefox'; Perfil = 'abcd1234.default-release'; Carpeta = 'ana\Firefoxbcd1234.default-release'; Archivo = 'bookmarks-2026-11-16.jsonlz4' }
+    )
+}
+```
+
+| Campo | Descripción |
+|---|---|
+| `Usuario` | Usuario de Windows (por nombre). |
+| `Navegador` | `Edge`, `Chrome`, `Brave`, `Vivaldi`, `Opera` o `Firefox`. |
+| `Perfil` | Perfil del navegador (`Default`, `Profile 1`…). |
+| `Carpeta` | Dentro de `config
+avegadores\`: `Bookmarks` y `favoritos.html` (o la copia de Firefox). |
+| `Favoritos` | Número de favoritos guardados (si el destino tiene menos, se avisa). |
+
+Para no restaurar una entrada, borra o comenta su bloque. `favoritos.html` se puede importar a mano en cualquier navegador.
+
+---
+
+## `config\outlook.psd1` + `config\outlook\`
+
+```powershell
+@{
+    Usuarios = @(
+        @{
+            Usuario = 'ana'
+            Cuentas = @(
+                @{ Perfil = 'Outlook'; Email = 'ana@empresa.com'; Tipo = 'Exchange / Microsoft 365 / Outlook.com' }
+                @{ Perfil = 'Outlook'; Email = 'ana@correo.es'; Tipo = 'IMAP'; Entrada = 'imap.correo.es:993 (SSL)'; Salida = 'smtp.correo.es:465 (SSL)' }
+            )
+            ArchivosPst = @('D:\Correo\Archivo 2020.pst')
+            Firmas = $true
+        }
+    )
+}
+```
+
+`Cuentas` y `ArchivosPst` son informativos: al aplicar quedan como pendientes. Las firmas se copian desde `config\outlook\<usuario>\Firmas` (solo las que falten).
+
+---
+
 ## `config\hosts.psd1`
 
 ```powershell
@@ -220,7 +316,8 @@ PowerShell = @{ Activo = $true; Paquetes = @( ... ) }
 - `Activo = $false` desactiva el gestor entero.
 - Comenta con `#` los paquetes que no quieras.
 - Los identificadores de winget son los de `winget search` (columna *Id*).
-- Se instala siempre la última versión.
+- Se instala siempre la última versión, para todos los usuarios si el paquete lo permite.
+- Al final de `Winget` pueden aparecer **comentados** los equivalentes de lo instalado con Chocolatey o Scoop: quita el `#` de los que quieras instalar.
 
 `paquetes_no_reinstalables.txt` es solo informativo.
 
