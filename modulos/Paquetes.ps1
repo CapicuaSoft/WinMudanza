@@ -151,7 +151,7 @@
         $listaWinget = @($winget)
         if ($sugeridos.Count -gt 0) { $listaWinget += $marca }
         $datos = [ordered]@{
-            Winget     = [ordered]@{ Activo = $true; Paquetes = $listaWinget }
+            Winget     = [ordered]@{ Activo = $true; GitFlow = (@($winget | Where-Object { $_ -in 'Git.Git', 'Microsoft.Git' }).Count -gt 0); Paquetes = $listaWinget }
             Npm        = [ordered]@{ Activo = $true; Paquetes = $npm }
             Pip        = [ordered]@{ Activo = $true; Paquetes = $pip }
             DotnetTool = [ordered]@{ Activo = $true; Paquetes = $dotnet }
@@ -166,6 +166,8 @@
             'Se instala la ultima version disponible. Los que ya esten instalados se saltan.'
             'winget instala para todos los usuarios si el paquete lo permite; si no, para el usuario que ejecuta.'
             'Al final de Winget pueden ir comentados equivalentes de lo instalado con Chocolatey o Scoop.'
+            'Winget.GitFlow = $true: si se instala Git y "git flow" no funciona, instala git-flow-next'
+            '  (GitTower.GitFlowNext); Git for Windows ya no incluye git-flow desde la 2.51.1.'
             'Orden al aplicar: Winget -> Npm -> Pip -> DotnetTool -> PowerShell'
             '(winget instala Node, Python o .NET si estan en su lista, y luego se usan).'
         )
@@ -189,6 +191,32 @@
         function Get-Lista($Seccion) {
             if (-not $Seccion -or -not $Seccion.Activo) { return $null }
             return @($Seccion.Paquetes | Where-Object { $_ })
+        }
+
+        # Instala un paquete de winget para todos los usuarios (o para el usuario si no se puede)
+        function Install-WingetPaquete([string]$Id, [string]$Etiqueta) {
+            return (Invoke-Cambio $Etiqueta {
+                $comunes = @('--id', $Id, '-e', '--source', 'winget', '--silent', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
+                $out = & winget install @comunes --scope machine 2>&1
+                $codigo = $LASTEXITCODE
+                # 0x8A150010 no hay instalador para todos los usuarios: se instala para el usuario actual
+                if ($codigo -eq -1978335216) {
+                    $out = & winget install @comunes 2>&1
+                    $codigo = $LASTEXITCODE
+                    if ($codigo -eq 0) { Write-Aviso "${Id}: no tiene instalador para todos los usuarios; instalado solo para $env:USERNAME" }
+                }
+                # 0x8A150061 ya instalado, 0x8A15002B sin actualizacion aplicable
+                if ($codigo -eq 0 -or $codigo -eq -1978335135 -or $codigo -eq -1978335189) { return }
+                if ($codigo -eq 3010 -or $codigo -eq 1641) { Write-Aviso "${Id}: requiere reiniciar"; return }
+                throw ('codigo 0x{0:X8}: {1}' -f $codigo, (($out | ForEach-Object { [string]$_ } | Where-Object { $_.Trim() } | Select-Object -Last 2) -join ' '))
+            })
+        }
+
+        # $true si 'git flow' funciona (git-flow-next, AVH u otro git-flow.exe en el PATH)
+        function Test-GitFlow {
+            if (-not (Test-Comando 'git')) { return $false }
+            $null = & git flow version 2>&1
+            return ($LASTEXITCODE -eq 0)
         }
 
         # ---------- Winget ----------
@@ -217,24 +245,24 @@
                 $etiqueta = 'winget [{0,2}/{1}] {2}' -f $n, $lista.Count, $id
                 if ($officeAparte -and $id -like 'Microsoft.Office') { Write-Omitido "$etiqueta (lo instala el modulo Office)"; continue }
                 if ($instalados.ContainsKey($id.ToLower())) { Write-Omitido "$etiqueta (ya instalado)"; continue }
-                $null = Invoke-Cambio $etiqueta {
-                    $comunes = @('--id', $id, '-e', '--source', 'winget', '--silent', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
-                    # Para todos los usuarios si el paquete lo permite
-                    $out = & winget install @comunes --scope machine 2>&1
-                    $codigo = $LASTEXITCODE
-                    # 0x8A150010 no hay instalador para todos los usuarios: se instala para el usuario actual
-                    if ($codigo -eq -1978335216) {
-                        $out = & winget install @comunes 2>&1
-                        $codigo = $LASTEXITCODE
-                        if ($codigo -eq 0) { Write-Aviso "${id}: no tiene instalador para todos los usuarios; instalado solo para $env:USERNAME" }
-                    }
-                    # 0x8A150061 ya instalado, 0x8A15002B sin actualizacion aplicable
-                    if ($codigo -eq 0 -or $codigo -eq -1978335135 -or $codigo -eq -1978335189) { return }
-                    if ($codigo -eq 3010 -or $codigo -eq 1641) { Write-Aviso "${id}: requiere reiniciar"; return }
-                    throw ('codigo 0x{0:X8}: {1}' -f $codigo, (($out | ForEach-Object { [string]$_ } | Where-Object { $_.Trim() } | Select-Object -Last 2) -join ' '))
-                }
+                $null = Install-WingetPaquete $id $etiqueta
             }
             Update-RutaEntorno
+
+            # git-flow: Git for Windows no lo incluye desde la 2.51.1. Se usa git-flow-next
+            # (recomendado por Git for Windows); winget deja git-flow.exe en el PATH, que es
+            # lo que Git necesita para reconocer 'git flow'.
+            $conGit = @($lista | Where-Object { $_ -in 'Git.Git', 'Microsoft.Git' }).Count -gt 0
+            if ($cfg.Winget.GitFlow -eq $false) { Write-Omitido 'git-flow desactivado (Winget.GitFlow)' }
+            elseif (-not $conGit) { }
+            elseif (-not (Test-Comando 'git') -and -not (Test-Simulacion)) { Write-Aviso 'git-flow: Git no quedo instalado; no se instala git-flow' }
+            elseif (Test-GitFlow) { Write-Omitido 'git-flow ya funciona (git flow version)' }
+            elseif (Install-WingetPaquete 'GitTower.GitFlowNext' 'git-flow (GitTower.GitFlowNext, para Git for Windows 2.51.1+)') {
+                Update-RutaEntorno
+                if (-not (Test-Simulacion) -and -not (Test-GitFlow)) {
+                    Write-Aviso "git-flow: instalado, pero 'git flow' no responde. Abre una consola nueva y prueba 'git flow version'."
+                }
+            }
         }
 
         # ---------- npm ----------

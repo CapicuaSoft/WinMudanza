@@ -306,7 +306,7 @@ Se añaden las que falten; quitar una de la lista **no** la borra del equipo.
 ## `config\paquetes.psd1`
 
 ```powershell
-Winget     = @{ Activo = $true; Paquetes = @( 'Git.Git' ... ) }
+Winget     = @{ Activo = $true; GitFlow = $true; Paquetes = @( 'Git.Git' ... ) }
 Npm        = @{ Activo = $true; Paquetes = @( ... ) }
 Pip        = @{ Activo = $true; Paquetes = @( ... ) }
 DotnetTool = @{ Activo = $true; Paquetes = @( ... ) }
@@ -317,6 +317,7 @@ PowerShell = @{ Activo = $true; Paquetes = @( ... ) }
 - Comenta con `#` los paquetes que no quieras.
 - Los identificadores de winget son los de `winget search` (columna *Id*).
 - Se instala siempre la última versión, para todos los usuarios si el paquete lo permite.
+- `Winget.GitFlow = $true`: si en la lista está Git (`Git.Git` o `Microsoft.Git`) y `git flow` no funciona, instala git-flow-next (`GitTower.GitFlowNext`). Extraer lo pone a `$true` cuando Git está en la lista; `$false` lo desactiva.
 - Al final de `Winget` pueden aparecer **comentados** los equivalentes de lo instalado con Chocolatey o Scoop: quita el `#` de los que quieras instalar.
 
 `paquetes_no_reinstalables.txt` es solo informativo.

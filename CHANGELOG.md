@@ -18,7 +18,7 @@ Primera versión. Sustituye a OptimizarHP (v1), que queda solo como referencia.
 - **Carpetas**: Descargas, Documentos, Música… de cada usuario que no están en su sitio por defecto (p. ej. en `D:`); se vuelven a apuntar ahí sin mover archivos.
 - **Compartidas**: recursos compartidos y permisos NTFS.
 - **Características**: activa las características de Windows que falten (Hyper-V, WSL, Sandbox, .NET 3.5…). Nunca desactiva ninguna.
-- **Paquetes**: winget, npm, pip, dotnet tool y módulos PowerShell. winget instala para todos los usuarios (`--scope machine`) si el paquete lo permite; si no, para el usuario y avisa. Extraer lista lo instalado solo para un usuario y sugiere comentado el equivalente en winget de lo instalado con Chocolatey o Scoop.
+- **Paquetes**: winget, npm, pip, dotnet tool y módulos PowerShell. winget instala para todos los usuarios (`--scope machine`) si el paquete lo permite; si no, para el usuario y avisa. Extraer lista lo instalado solo para un usuario y sugiere comentado el equivalente en winget de lo instalado con Chocolatey o Scoop. Si se instala Git y `git flow` no funciona (Git for Windows ya no lo incluye desde la 2.51.1), instala git-flow-next (`GitTower.GitFlowNext`) y lo comprueba.
 - **Menus**: menús contextuales que winget no añade, solo si el programa está instalado: «Abrir en Claude» (Claude Code), «Abrir con Code», «Buscar con Everything...» y la extensión de WinMerge.
 - **Office**: instala Microsoft 365 / Office en silencio con la Office Deployment Tool oficial (`setup.exe` verificado por firma). La activación queda como pendiente manual. Paquetes no instala `Microsoft.Office` con winget si este módulo se encarga.
 - **UniGetUI**: su configuración, en todos los perfiles y Default.

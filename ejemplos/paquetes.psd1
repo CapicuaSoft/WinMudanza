@@ -8,6 +8,7 @@
 @{
     Winget = @{
         Activo = $true
+        GitFlow = $true        # si se instala Git y 'git flow' no funciona, instala git-flow-next
         Paquetes = @(
             '7zip.7zip'
             'Git.Git'

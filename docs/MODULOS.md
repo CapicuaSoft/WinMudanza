@@ -156,6 +156,8 @@ Módulo `Caracteristicas`: las de *Activar o desactivar las características de 
 
 **Para todos los usuarios:** winget instala con `--scope machine`. Si el paquete no tiene instalador para todos los usuarios (error `0x8A150010`), lo instala para el usuario que ejecuta WinMudanza y lo avisa en el resumen. Al extraer se listan los programas que hoy están instalados solo para un usuario. npm y dotnet tool siguen siendo por usuario; los módulos de PowerShell ya se instalan para todos (`-Scope AllUsers`).
 
+**git-flow:** Git for Windows dejó de incluir git-flow en la versión 2.51.1 (el proyecto original está abandonado). Si en la lista está Git y `git flow` no funciona, después de winget se instala **git-flow-next** (`GitTower.GitFlowNext`), el sustituto que recomienda Git for Windows: un `git-flow.exe` nativo, compatible con los repositorios y la configuración `gitflow.*` de git-flow y git-flow-avh. Git solo reconoce `git flow` si encuentra en el PATH un archivo llamado exactamente `git-flow.exe`; winget lo deja así en `C:\Program Files\WinGet\Links`. Después se comprueba con `git flow version`. Se desactiva con `Winget.GitFlow = $false`.
+
 **Chocolatey y Scoop:** winget ya reconoce muchos programas instalados con ellos (por el registro de programas instalados) y esos entran en la lista normal. Para el resto, Extraer busca el equivalente en winget por nombre y lo escribe **comentado** al final de la lista de winget, con el paquete de origen:
 
 ```powershell

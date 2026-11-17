@@ -108,7 +108,7 @@
                 $n.InnerText = (New-Object System.Security.Principal.NTAccount $nt).Translate([System.Security.Principal.SecurityIdentifier]).Value
             }
             if ($faltan.Count -gt 0) {
-                Add-Pendiente "Tarea ${etiqueta}: la cuenta '$($faltan -join ', ')' no existe aun. Inicia sesion con ella y vuelve a ejecutar -Solo Tareas"
+                Add-Pendiente "Tarea ${etiqueta}: la cuenta '$(@($faltan | Select-Object -Unique) -join ', ')' no existe aun. Inicia sesion con ella y vuelve a ejecutar -Solo Tareas"
                 continue
             }
             if ([string]$xml.Task.Principals.Principal.LogonType -eq 'Password') {
