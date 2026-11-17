@@ -1,5 +1,7 @@
 # WinMudanza
 
+[![Licencia](https://img.shields.io/badge/licencia-LGPL--2.1-blue)](LICENSE)
+
 Scripts de PowerShell para **mudarte de un Windows a otro**: dejar a punto un **Windows 11 recién instalado** con la configuración del equipo anterior.
 
 - **Extraer**: lee la configuración del equipo actual (características de Windows, Wi-Fi, usuarios, carpetas compartidas, unidades de red, impresoras, programas, Office, variables de entorno, configuración de desarrollo, UniGetUI, Steam…) y la guarda en archivos `.psd1` que puedes revisar y editar.
@@ -77,3 +79,8 @@ Lo que genera Extraer contiene **secretos en texto plano**: contraseñas de usua
 | [ejemplos/](ejemplos/) | Archivos de configuración de ejemplo con datos ficticios |
 
 Ayuda desde PowerShell: `Get-Help .\WinMudanza.ps1 -Full`
+
+## Licencia
+
+Distribuido bajo la licencia **GNU Lesser General Public License v2.1**.  
+Consulta el archivo [LICENSE](LICENSE) para más detalles.

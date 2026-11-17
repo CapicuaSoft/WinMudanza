@@ -50,7 +50,7 @@ Ver `docs\DESARROLLO.md`. Resumen:
 - Versión 1.0.0 (aún sin publicar; numeración desde 1.0.0). Incluye, a pedido del usuario: Revisar antes de formatear, Copiar fuera de C: (`CopiarA = 'D:\WinMudanza'`), lanzador `.cmd`, continuar tras reiniciar, contraseñas por pantalla, Comparar, Sandbox automático; módulos Wifi, UnidadesRed, Impresoras, Hosts, Entorno, Desarrollo; ajuste 06 PowerShell (RemoteSigned, NuGet+PSGallery, TLS 1.2, doble clic). Wi-Fi y claves SSH en texto plano en `config\` (como las contraseñas).
 - Características de Windows: solo activar, nunca desactivar. Sin capacidades (OpenSSH, Paint, idiomas…) ni distribuciones de WSL.
 - Office: módulo propio con la Office Deployment Tool, instalación silenciosa; activación manual. `C:\Proyectos\InstalarOffice` queda intacto como referencia.
-- Ejecución por menú y por parámetros; formato `.psd1`; git solo local.
+- Ejecución por menú y por parámetros; formato `.psd1`. Repositorio público en GitHub: https://github.com/jbautistamartin/WinMudanza (rama `main`; commits con el email noreply de GitHub, nunca el personal).
 - Paquetes: winget con `--scope machine` y, si no hay instalador para todos (`0x8A150010`), por usuario con aviso. npm y dotnet tool se quedan por usuario. Lo de Chocolatey/Scoop que winget no reconoce se sugiere **comentado** en `paquetes.psd1`.
 - git-flow: git-flow-next (`GitTower.GitFlowNext`, winget, `--scope machine`) si se instala Git y `git flow` no funciona; interruptor `Winget.GitFlow` en `paquetes.psd1`. Probado en el equipo del usuario: funciona.
 - Módulo Menus (tras Paquetes, config en `ajustes.psd1` sección `Menus`): «Abrir en Claude» (Claude Code), VS Code, Everything, WinMerge. Sin menú de Claude Desktop (probado: `claude-desktop.exe` no abre carpetas).

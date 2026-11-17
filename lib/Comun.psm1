@@ -337,7 +337,7 @@ function Update-RutaEntorno {
 }
 
 # Convierte una identidad (IdentityReference o texto) en datos portables entre equipos:
-#   Cuenta -> nombre sin el prefijo del equipo local (MADRID\maria -> maria)
+#   Cuenta -> nombre sin el prefijo del equipo local (EQUIPO\ana -> ana)
 #   Sid    -> SID solo si es una cuenta conocida de Windows (Todos, Administradores, SYSTEM...);
 #             las cuentas locales cambian de SID en cada instalacion y se resuelven por nombre.
 function ConvertTo-CuentaPortable($Identidad) {
@@ -392,7 +392,7 @@ function Get-PythonConPip {
     return $null
 }
 
-# Rutas portables entre usuarios/equipos: C:\Users\josel\AppData\Roaming\x -> %APPDATA%\x
+# Rutas portables entre usuarios/equipos: C:\Users\ana\AppData\Roaming\x -> %APPDATA%\x
 # (se prueban de la mas larga a la mas corta). ConvertFrom-RutaPortable las expande.
 function ConvertTo-RutaPortable([string]$Ruta) {
     if (-not $Ruta) { return $Ruta }
