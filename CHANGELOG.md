@@ -27,7 +27,7 @@ Primera versión. Sustituye a OptimizarHP (v1), que queda solo como referencia.
 - **Navegadores**: favoritos de Edge, Chrome, Brave, Vivaldi, Opera y Firefox de cada usuario; se restauran si el perfil del navegador no tiene, y si no, queda un `favoritos.html` para importar.
 - **Outlook**: firmas de Outlook clásico; las cuentas de correo (con servidores IMAP/POP) y los `.pst` quedan como pendientes.
 - **Tareas**: tareas programadas de `\Personal\` (configurable con `CarpetasTareas`), con las cuentas por nombre para que funcionen en el equipo nuevo.
-- **Inicio**: anclados del menú Inicio y de la barra de tareas, iconos del escritorio (accesos, iconos de Windows visibles y su posición) y programas de la carpeta Inicio de cada usuario.
+- **Inicio**: anclados del menú Inicio, de la barra de tareas y del Explorador (carpetas de Acceso rápido y archivos en Favoritos, de todos los usuarios), iconos del escritorio (accesos, iconos de Windows visibles y su posición) y programas de la carpeta Inicio de cada usuario.
 
 ### Uso
 - Menú interactivo y parámetros `-Accion`, `-Solo`, `-Omitir` (también como lista separada por comas), `-WhatIf`, `-DirConfig`, `-SinConfirmar`, `-SinReiniciar`.

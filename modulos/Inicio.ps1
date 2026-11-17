@@ -1,21 +1,24 @@
-﻿# Modulo Inicio: menu Inicio (anclados), barra de tareas (anclados), escritorio (accesos directos,
-# iconos de Windows visibles y posicion de los iconos) y programas que se abren al iniciar sesion
-# (carpeta Inicio del menu Inicio), de cada usuario.
+﻿# Modulo Inicio: menu Inicio (anclados), barra de tareas (anclados), Explorador (anclados a Acceso
+# rapido y Favoritos), escritorio (accesos directos, iconos de Windows visibles y posicion de los
+# iconos) y programas que se abren al iniciar sesion (carpeta Inicio del menu Inicio), de cada usuario.
 # Windows 11 no tiene una forma oficial de cambiar los anclados de un usuario ya creado; se usa
 # la copia exacta de sus archivos:
 #   Menu Inicio   -> LocalState\start*.bin de StartMenuExperienceHost
 #   Barra tareas  -> accesos de "User Pinned\TaskBar" + registro Explorer\Taskband
+#   Explorador    -> se leen las listas de saltos de AutomaticDestinations y se guardan las rutas;
+#                    al aplicar se anclan con el Shell (Anclar-Explorador.ps1): directamente para el
+#                    usuario que ejecuta y con RunOnce, al iniciar sesion, para los demas
 #   Escritorio    -> accesos (.lnk/.url) del escritorio del usuario y del publico,
 #                    HideDesktopIcons\NewStartPanel (Este equipo, Papelera...) y Shell\Bags\1\Desktop
 #   Al iniciar    -> carpeta Startup del usuario (y la comun de todos los usuarios)
-# - Aplicar: menu Inicio, barra de tareas, iconos de Windows y posiciones se restauran UNA vez por
+# - Aplicar: menu Inicio, barra de tareas, Explorador, iconos de Windows y posiciones se restauran UNA vez por
 #   usuario (se marca en HKCU\Software\WinMudanza\Inicio) para no deshacer lo que cambie despues.
 #   De los accesos del escritorio y de la carpeta Inicio solo se copian los que falten.
 #   Un usuario con sesion abierta que no sea el que ejecuta se salta (su Explorador lo sobrescribiria).
 
 @{
     Nombre        = 'Inicio'
-    Descripcion   = 'Menu Inicio, barra de tareas, escritorio y programas al iniciar sesion'
+    Descripcion   = 'Menu Inicio, barra de tareas, anclados del Explorador, escritorio y programas al iniciar sesion'
     Orden         = 58
     DependeDe     = @('Usuarios', 'Paquetes', 'Carpetas')
     ArchivoConfig = 'inicio.psd1'
@@ -42,7 +45,7 @@
             $destU = Join-Path $dirBase $P.Nombre
             $u = [ordered]@{
                 Usuario = $P.Nombre; MenuInicio = $false; BarraTareas = @(); Taskband = [ordered]@{}
-                Escritorio = @(); IconosSistema = [ordered]@{}; Posiciones = [ordered]@{}; AlIniciar = @()
+                AccesoRapido = @(); Favoritos = @(); Escritorio = @(); IconosSistema = [ordered]@{}; Posiciones = [ordered]@{}; AlIniciar = @()
             }
 
             # Menu Inicio
@@ -60,6 +63,15 @@
                 $u.BarraTareas = Copy-AConfig $lnks (Join-Path $destU 'BarraTareas')
                 Write-Ok "$($P.Nombre): barra de tareas ($($lnks.Count) accesos: $(Get-Nombres $lnks))"
             }
+
+            # Explorador: carpetas ancladas a Acceso rapido y archivos en Favoritos
+            $anc = Get-AncladosExplorador $P
+            $u.AccesoRapido = $anc.AccesoRapido
+            $u.Favoritos = $anc.Favoritos
+            if ($u.AccesoRapido.Count -gt 0) { Write-Ok "$($P.Nombre): Explorador, Acceso rapido ($($u.AccesoRapido.Count): $($u.AccesoRapido -join ', '))" }
+            if ($u.Favoritos.Count -gt 0) { Write-Ok "$($P.Nombre): Explorador, Favoritos ($($u.Favoritos.Count) archivos)" }
+            $enC = @(@($u.AccesoRapido) + @($u.Favoritos) | Where-Object { $_ -ne '%USERPROFILE%' -and (Test-EnUnidadSistema ($_ -replace '(?i)%USERPROFILE%', $P.Ruta)) })
+            if ($enC.Count -gt 0) { Write-Info "   $($enC.Count) de ellos estan en $env:SystemDrive (si no existen en el equipo nuevo no se anclaran): $(($enC | Select-Object -First 3) -join ', ')$(if ($enC.Count -gt 3) { '...' })" }
 
             # Escritorio: accesos directos (si esta fuera del perfil, p. ej. en D:, ya se conserva)
             $esc = Get-EscritorioPerfil $P
@@ -85,7 +97,7 @@
                 $u.AlIniciar = Copy-AConfig $ini (Join-Path $destU 'AlIniciar')
                 Write-Ok "$($P.Nombre): al iniciar sesion: $(Get-Nombres $ini)"
             }
-            if ($u.MenuInicio -or $u.BarraTareas.Count -gt 0 -or $u.Escritorio.Count -gt 0 -or $u.IconosSistema.Count -gt 0 -or $u.Posiciones.Count -gt 0 -or $u.AlIniciar.Count -gt 0) {
+            if ($u.MenuInicio -or $u.BarraTareas.Count -gt 0 -or $u.AccesoRapido.Count -gt 0 -or $u.Favoritos.Count -gt 0 -or $u.Escritorio.Count -gt 0 -or $u.IconosSistema.Count -gt 0 -or $u.Posiciones.Count -gt 0 -or $u.AlIniciar.Count -gt 0) {
                 [void]$usuarios.Add($u)
             }
         }
@@ -105,7 +117,9 @@
             'Los archivos estan en config\inicio\<usuario>\ (MenuInicio, BarraTareas, Escritorio, AlIniciar)'
             'y en config\inicio\_Comun\ (escritorio publico y carpeta Inicio de todos los usuarios).'
             'MenuInicio = $false, BarraTareas = @() o Posiciones = @{} para no restaurarlos a ese usuario.'
-            'Menu Inicio, barra, iconos de Windows y posiciones se restauran una sola vez por usuario;'
+            'AccesoRapido (carpetas) y Favoritos (archivos): anclados del Explorador, en orden; editables.'
+            '  shell:Downloads = carpeta conocida del usuario; @() = no tocar los de ese usuario.'
+            'Menu Inicio, barra, Explorador, iconos de Windows y posiciones se restauran una sola vez por usuario;'
             'de Escritorio y AlIniciar se copian los accesos que falten.'
             'Taskband, IconosSistema, Posiciones: valores del registro (binarios en base64). No editar.'
         )
@@ -151,6 +165,9 @@
             # ---- Lo que se restaura una vez ----
             $tocaMenu = $u.MenuInicio -and -not ($hecho -and $hecho.MenuInicio)
             $tocaBarra = (@($u.BarraTareas).Count -gt 0) -and -not ($hecho -and $hecho.BarraTareas)
+            $hayExp = (@($u.AccesoRapido | Where-Object { $_ }).Count -gt 0) -or (@($u.Favoritos | Where-Object { $_ }).Count -gt 0)
+            $tocaExp = $hayExp -and -not ($hecho -and $hecho.Explorador)
+            if ($hayExp -and -not $tocaExp) { Write-Omitido "$($P.Nombre): anclados del Explorador ya restaurados por WinMudanza" }
             $tocaEsc = ($u.IconosSistema.Count -gt 0 -or $u.Posiciones.Count -gt 0) -and -not ($hecho -and $hecho.Escritorio)
             if ($u.MenuInicio -and -not $tocaMenu) { Write-Omitido "$($P.Nombre): menu Inicio ya restaurado por WinMudanza" }
             if (@($u.BarraTareas).Count -gt 0 -and -not $tocaBarra) { Write-Omitido "$($P.Nombre): barra de tareas ya restaurada por WinMudanza" }
@@ -189,6 +206,39 @@
                     $null = Set-RegValor -Ruta $marca -Nombre 'BarraTareas' -Valor 1
                     if ($esYo) { $estadoInicio.Reiniciar = $true }
                 }
+            }
+
+            # ---- Explorador: Acceso rapido y Favoritos (el Shell solo ancla en la sesion del propio usuario) ----
+            if ($tocaExp) {
+                $acceso = @($u.AccesoRapido | Where-Object { $_ })
+                $favs = @($u.Favoritos | Where-Object { $_ })
+                $noHay = @($acceso + $favs | Where-Object { -not (Test-AncladoExiste $_ $P) })
+                if ($noHay.Count -gt 0) {
+                    Write-Aviso "$($P.Nombre): $($noHay.Count) anclados del Explorador no existen y no se anclaran: $(($noHay | Select-Object -First 3) -join ', ')$(if ($noHay.Count -gt 3) { '...' })"
+                }
+                $script = Join-Path $Ctx.Raiz 'modulos\Inicio\Anclar-Explorador.ps1'
+                $desc = "$($P.Nombre): anclados del Explorador (Acceso rapido: $($acceso.Count), Favoritos: $($favs.Count))"
+                if ($esYo) {
+                    $ok = Invoke-Cambio $desc {
+                        $salida = @(& $script -AccesoRapido $acceso -Favoritos $favs)
+                        foreach ($l in $salida) {
+                            if ("$l" -like 'NO ANCLADO*') { Write-Aviso "$($P.Nombre): $l" } elseif ("$l" -notlike 'FALTA*') { Write-Info "   $l" }
+                        }
+                    }
+                } else {
+                    $dirU = Join-Path $P.Ruta 'AppData\Local\WinMudanza'
+                    $ok = Invoke-Cambio "$desc, al iniciar sesion" {
+                        if (-not (Test-Path -LiteralPath $dirU)) { New-Item -ItemType Directory -Path $dirU -Force -ErrorAction Stop | Out-Null }
+                        Copy-Item -LiteralPath $script -Destination $dirU -Force -ErrorAction Stop
+                        Write-Psd1 -Ruta (Join-Path $dirU 'Anclados.psd1') -Datos ([ordered]@{ AccesoRapido = $acceso; Favoritos = $favs }) -Cabecera @('Anclados del Explorador que WinMudanza restaura al iniciar sesion')
+                    }
+                    if ($ok) {
+                        $cmd = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "{0}" -Config "{1}" -Log "{2}"' -f `
+                            (Join-Path $dirU 'Anclar-Explorador.ps1'), (Join-Path $dirU 'Anclados.psd1'), (Join-Path $dirU 'Anclados.log')
+                        $ok = Set-RunOnce $P.HKCU 'WMUD_Anclados' $cmd
+                    }
+                }
+                if ($ok) { $null = Set-RegValor -Ruta $marca -Nombre 'Explorador' -Valor 1 }
             }
 
             # ---- Escritorio: accesos que falten (si el escritorio esta en el perfil) ----

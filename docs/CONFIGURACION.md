@@ -255,6 +255,9 @@ Para no restaurar una tarea, borra o comenta su bloque.
             MenuInicio  = $true
             BarraTareas = @('File Explorer.lnk', 'Microsoft Edge.lnk')
             Taskband    = @{ ... }     # registro de la barra de tareas (no editar)
+            AccesoRapido = @('shell:Downloads', 'D:\Datos', '%USERPROFILE%')
+            Favoritos   = @('D:\Datos
+otas.txt')
             Escritorio  = @('Absolum Demo.url')
             IconosSistema = @{ ... }   # iconos de Windows visibles (no editar)
             Posiciones  = @{ ... }     # posición de los iconos (no editar)
@@ -271,6 +274,8 @@ Para no restaurar una tarea, borra o comenta su bloque.
 | `MenuInicio` | `$true` si se guardaron los anclados del menú Inicio. `$false` para no restaurarlos. |
 | `BarraTareas` | Accesos anclados a la barra de tareas. `@()` para no restaurar la barra. |
 | `Taskband` | Valores del registro de la barra de tareas (binarios en base64). No editar. |
+| `AccesoRapido` | Carpetas ancladas a Acceso rápido del Explorador, en orden. `shell:<nombre>` = carpeta conocida del usuario (`shell:Downloads`, `shell:Personal`…); admite `%USERPROFILE%` y otras variables. `@()` para no tocar los anclados de ese usuario. |
+| `Favoritos` | Archivos en Favoritos del Explorador (Windows 11), en orden. `@()` para no tocarlos. |
 | `Escritorio` | Accesos directos del escritorio del usuario; se copian los que falten. |
 | `IconosSistema` | Iconos de Windows que se muestran en el escritorio (registro, no editar). `@{}` para no restaurarlos. |
 | `Posiciones` | Posición de los iconos del escritorio (registro, no editar). `@{}` para no restaurarla. |
@@ -278,7 +283,7 @@ Para no restaurar una tarea, borra o comenta su bloque.
 | `AlIniciarComun` | Accesos de la carpeta Inicio común (todos los usuarios). |
 | `EscritorioComun` | Accesos del escritorio público (todos los usuarios). |
 
-Los archivos están en `config\inicio\<usuario>\` (`MenuInicio`, `BarraTareas`, `Escritorio`, `AlIniciar`) y `config\inicio\_Comun\`. El menú Inicio, la barra, los iconos de Windows y las posiciones se restauran una sola vez por usuario: para volver a restaurarlos, borra la clave `HKCU\Software\WinMudanza\Inicio` de ese usuario.
+Los archivos están en `config\inicio\<usuario>\` (`MenuInicio`, `BarraTareas`, `Escritorio`, `AlIniciar`) y `config\inicio\_Comun\`. El menú Inicio, la barra, los anclados del Explorador, los iconos de Windows y las posiciones se restauran una sola vez por usuario: para volver a restaurarlos, borra la clave `HKCU\Software\WinMudanza\Inicio` de ese usuario.
 
 ---
 

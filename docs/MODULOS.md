@@ -314,15 +314,17 @@ Outlook clásico (Microsoft 365 / Office 2016 o posterior). Windows no permite t
 **Extrae**, de cada usuario:
 - **Menú Inicio:** los anclados, es decir, el archivo `start2.bin` (y `start*.bin`) de `AppData\Local\Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState`.
 - **Barra de tareas:** los accesos de `AppData\Roaming\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar` y la clave del registro `Explorer\Taskband`, que guarda su orden.
+- **Explorador:** las carpetas ancladas a **Acceso rápido** y los archivos en **Favoritos** (Windows 11), en su orden. Se leen de las listas de saltos de `AppData\Roaming\Microsoft\Windows\Recent\AutomaticDestinations` (`f01b4d95cf55d32a…` y `5f7b5f1e01b83767…`), así que también se extraen los de otros usuarios. Se guardan como rutas editables: las carpetas conocidas como `shell:Downloads`, `shell:Personal`…, lo del perfil con `%USERPROFILE%`. Extraer avisa de cuántos están en C:.
 - **Escritorio:** los accesos directos (`.lnk`, `.url`) del escritorio del usuario y del escritorio público (todos los usuarios), qué iconos de Windows se muestran (Este equipo, Papelera, Red, Panel de control, carpeta del usuario) y la posición de los iconos (`Shell\Bags\1\Desktop`). Los documentos y carpetas del escritorio **no** se copian: Extraer avisa si los hay. Si el escritorio está fuera del perfil (por ejemplo en `D:`, con el módulo Carpetas) o en OneDrive, ya se conserva allí y no se copia.
 - **Al iniciar sesión:** los accesos de la carpeta Inicio del menú Inicio (`shell:startup`), y también los de la carpeta común de todos los usuarios (`shell:common startup`).
 
 Se guarda en `config\inicio\<usuario>\` (`MenuInicio`, `BarraTareas`, `Escritorio`, `AlIniciar`) y `config\inicio\_Comun\` (`Escritorio`, `AlIniciar`).
 
 **Aplica:**
-- Menú Inicio, barra de tareas, iconos de Windows del escritorio y posición de los iconos se restauran **una sola vez por usuario** (queda marcado en `HKCU\Software\WinMudanza\Inicio`), para no deshacer lo que el usuario cambie después. El `start2.bin` anterior se guarda como `start2.bin.wmud.bak`.
+- Menú Inicio, barra de tareas, anclados del Explorador, iconos de Windows del escritorio y posición de los iconos se restauran **una sola vez por usuario** (queda marcado en `HKCU\Software\WinMudanza\Inicio`), para no deshacer lo que el usuario cambie después. El `start2.bin` anterior se guarda como `start2.bin.wmud.bak`.
 - Si es el usuario que ejecuta WinMudanza, se reinicia su Explorador para que se vea el cambio. Los demás lo verán al iniciar sesión.
 - Del escritorio y de la carpeta Inicio solo se copian los accesos que falten.
+- **Anclados del Explorador:** se desanclan los que tenga el usuario (los de Windows: Escritorio, Documentos, Imágenes…) y se anclan los de la configuración en su orden, con el Shell (`modulos\Inicio\Anclar-Explorador.ps1`). El Shell solo cambia los anclados de su propia sesión: para el usuario que ejecuta WinMudanza se hace al momento; para los demás se copia el script a su `AppData\Local\WinMudanza\` y se programa con **RunOnce** al iniciar sesión (resultado en `Anclados.log`). Los que no existen se avisan y se saltan.
 
 **Depende de:** Usuarios, Paquetes (los programas anclados deben estar instalados) y Carpetas (dónde está el escritorio).
 
@@ -330,6 +332,8 @@ Se guarda en `config\inicio\<usuario>\` (`MenuInicio`, `BarraTareas`, `Escritori
 - Windows 11 no tiene una forma oficial de cambiar los anclados de un usuario ya creado: se copia el archivo tal cual. Funciona entre equipos con Windows 11, pero Microsoft no lo documenta y podría dejar de funcionar en una versión futura.
 - Los anclados y accesos de programas que no estén instalados no funcionan hasta instalarlos.
 - La posición de los iconos depende de la resolución de la pantalla: con otra distinta, Windows puede recolocarlos.
+- Los anclados del Explorador que no existan en el equipo nuevo (archivos o carpetas de C: que no se copiaron, unidades no conectadas) no se anclan. Si el usuario ejecuta Aplicar antes de crear sus carpetas en `D:`, vuelve a anclarlas a mano o borra el valor `Explorador` de la marca y ejecuta `-Solo Inicio`.
+- El ajuste 04 `DesanclarCarpetas` desancla antes las carpetas indicadas del usuario actual; si Inicio restaura los anclados del Explorador, manda lo de Inicio.
 - Si otro usuario tiene la sesión abierta, se salta (su Explorador sobrescribiría el cambio): cierra su sesión y ejecuta `-Solo Inicio`.
 - Si el usuario aún no tiene perfil, queda como pendiente.
 - Los programas que se abren al iniciar sesión desde el registro (`Run`) no se copian: la mayoría los vuelve a configurar el propio programa al instalarse.
