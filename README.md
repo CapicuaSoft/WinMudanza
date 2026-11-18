@@ -7,7 +7,7 @@ Scripts de PowerShell para **mudarte de un Windows a otro**: dejar a punto un **
 - **Extraer**: lee la configuración del equipo actual (características de Windows, Wi-Fi, usuarios, carpetas compartidas, unidades de red, impresoras, programas, Office, variables de entorno, configuración de desarrollo, UniGetUI, Steam…) y la guarda en archivos `.psd1` que puedes revisar y editar.
 - **Revisar**: antes de formatear, avisa de todo lo que esa configuración necesita y está en C: (y se perdería).
 - **Copiar**: guarda WinMudanza con su configuración fuera de C: (otro disco o USB).
-- **Aplicar**: en el equipo nuevo, aplica esos archivos y además una serie de ajustes de Windows (menú contextual clásico, terminales, Edge, Explorador, energía y PowerShell). Si hace falta reiniciar a mitad, **continúa sola** al volver a iniciar sesión.
+- **Aplicar**: en el equipo nuevo, aplica esos archivos y además una serie de ajustes de Windows (menú contextual clásico, terminales, Edge, Explorador, energía, PowerShell y Escritorio remoto). Si hace falta reiniciar a mitad, **continúa sola** al volver a iniciar sesión.
 - **Comparar**: muestra qué diferencias quedan entre la configuración y el equipo.
 
 Todo es configurable: qué módulos se ejecutan, qué ajustes se aplican y qué datos se restauran. Antes de aplicar se puede **simular** para ver qué haría sin cambiar nada.
@@ -39,7 +39,7 @@ Las contraseñas de los usuarios locales se piden por pantalla al aplicar (o pue
 
 | Módulo | Extrae | Aplica |
 |---|---|---|
-| **Ajustes** | — (se configura en `config\ajustes.psd1`) | Menú clásico, terminales en menú contextual, Edge, Explorador/barra de tareas, energía, PowerShell listo para scripts |
+| **Ajustes** | — (se configura en `config\ajustes.psd1`) | Menú clásico, terminales en menú contextual, Edge, Explorador/barra de tareas, energía, PowerShell listo para scripts, Escritorio remoto |
 | **Wifi** | Redes Wi-Fi guardadas con su contraseña | Las añade para todos los usuarios |
 | **Características** | Características de Windows activadas (Hyper-V, WSL, Sandbox, .NET 3.5…) | Activa las que falten (nunca desactiva) |
 | **Usuarios** | Usuarios locales y grupos | Crea usuarios y asigna grupos |
@@ -50,7 +50,7 @@ Las contraseñas de los usuarios locales se piden por pantalla al aplicar (o pue
 | **Hosts** | Entradas personalizadas de `hosts` | Añade las que falten |
 | **Paquetes** | winget, npm, pip, dotnet tool, módulos PowerShell; sugiere el equivalente en winget de lo instalado con Chocolatey/Scoop | Los reinstala (winget, para todos los usuarios si se puede) |
 | **Office** | Producto, idioma, canal y apps excluidas de Microsoft 365 | Lo instala en silencio con la herramienta oficial de Microsoft |
-| **Menus** | — (se configura en `config\ajustes.psd1`) | Menús contextuales que winget no añade: «Abrir en Claude», «Abrir con Code», Everything, WinMerge |
+| **Menus** | — (se configura en `config\ajustes.psd1`) | Menús contextuales que winget no añade: «Abrir en Claude», «Abrir con Code», Everything, WinMerge, Sourcetree |
 | **Entorno** | Variables de entorno y PATH personalizados | Crea las que falten |
 | **Desarrollo** | `.gitconfig`, `.ssh`, perfil de PowerShell, Windows Terminal, VS Code | Los restaura |
 | **Navegadores** | Favoritos de Edge, Chrome, Brave, Vivaldi, Opera y Firefox de cada usuario | Los restaura si el navegador no tiene; si no, deja un HTML para importar |

@@ -11,7 +11,7 @@ Todos los módulos son **repetibles**: lo que ya está aplicado se salta, así q
 ## Ajustes
 
 **Extrae:** nada (los valores están en `ajustes.psd1`).
-**Aplica:** 6 grupos de ajustes de la carpeta `modulos\Ajustes\`, cada uno activable por separado.
+**Aplica:** 7 grupos de ajustes de la carpeta `modulos\Ajustes\`, cada uno activable por separado.
 
 | Ajuste | Ámbito | Qué cambia |
 |---|---|---|
@@ -21,6 +21,7 @@ Todos los módulos son **repetibles**: lo que ya está aplicado se salta, así q
 | 04 Explorador | Usuario + equipo | `Explorer\Advanced`, `CabinetState`, `Search`, directivas `Dsh`, `CloudContent`, `Explorer`; anclados con Shell COM |
 | 05 Energía | Equipo + usuario | `powercfg`, `PowerThrottling`, `VisualEffects`, `GameBar`, `GameConfigStore` |
 | 06 PowerShell | Equipo (galería: usuario que ejecuta) | Directiva de ejecución (`ShellIds\Microsoft.PowerShell`, y PowerShell 7 si está), NuGet + PSGallery de confianza, TLS 1.2 en .NET (`SchUseStrongCrypto`, `SystemDefaultTlsVersions`), doble clic en `.ps1` (`Microsoft.PowerShellScript.1\Shell`) |
+| 07 Escritorio remoto | Equipo | Permite conexiones (`Terminal Server\fDenyTSConnections = 0`), exige NLA (`WinStations\RDP-Tcp\UserAuthentication = 1`), activa las reglas del Firewall del grupo Escritorio remoto (por su recurso: vale en cualquier idioma) y, si `TermService` está deshabilitado, lo pone en Manual |
 
 **Cómo llega a todos los usuarios:**
 - Perfiles con sesión abierta: se escribe en su registro cargado.
@@ -31,6 +32,7 @@ Todos los módulos son **repetibles**: lo que ya está aplicado se salta, así q
 - Windows 11 24H2+ protege algunas claves de la barra de tareas (`TaskbarDa`, a veces `SearchboxTaskbarMode`). Si falla, se muestra un aviso y se continúa.
 - Anclar/desanclar carpetas en Inicio solo funciona para el usuario que ejecuta el script.
 - 06 PowerShell: una directiva de grupo de ejecución tiene prioridad (se avisa). Si un usuario eligió un programa para abrir `.ps1` ("Abrir con…"), su elección gana al doble clic. La confianza en PowerShell Gallery es por usuario.
+- 07 Escritorio remoto: Windows Home no puede recibir conexiones (se avisa y no cambia nada). Los administradores pueden conectarse; el resto de usuarios necesita el grupo *Usuarios de escritorio remoto* (módulo Usuarios). Con cuenta Microsoft se entra con el email y su contraseña (no el PIN).
 - Edge muestra *"Administrado por tu organización"* mientras haya directivas. En equipos sin dominio, Edge puede ignorar las directivas **obligatorias** de página de inicio y buscador: compruébalo en `edge://policy` y, si aparecen con error, usa `TipoDirectiva = 'Recomendada'`.
 - Los perfiles de usuarios con sesión abierta en otra sesión pueden no poder cargarse: se avisa y se omiten.
 
@@ -206,10 +208,11 @@ Módulo `Caracteristicas`: las de *Activar o desactivar las características de 
 | **Abrir con Code** | Archivo, carpeta, fondo de carpeta, unidad | Abre VS Code, como el instalador clásico |
 | **Buscar con Everything...** | Carpeta, fondo de carpeta, unidad | Abre Everything buscando en esa carpeta |
 | **WinMerge** | Archivos y carpetas | Registra la extensión del Explorador de WinMerge (`ShellExtensionX64.dll`) y la activa en todos los perfiles |
+| **Abrir en Sourcetree** | Carpeta, fondo de carpeta | Abre esa carpeta en Sourcetree (`SourceTree.exe -f <carpeta>`); vale para la versión Enterprise (`Program Files (x86)\Atlassian`) y la de usuario |
 
 - Programa instalado para todos los usuarios → menú en `HKLM` (todos los usuarios). Instalado solo para el usuario → en su `HKCU`.
 - Si ya hay otra entrada que abre ese programa (por ejemplo, la que crea el instalador de Everything), no se duplica.
-- Si el usuario tiene una entrada antigua con el mismo nombre que apunta a otra ruta (por ejemplo, un VS Code desinstalado), se corrige.
+- Si el usuario tiene una entrada antigua con el mismo nombre que apunta a otra ruta (por ejemplo, un VS Code desinstalado) o que quedó a medias (sin comando), se corrige.
 
 **Depende de:** Paquetes.
 

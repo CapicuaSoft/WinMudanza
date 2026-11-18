@@ -4,7 +4,7 @@
 
 @{
     Nombre        = 'Ajustes'
-    Descripcion   = 'Menu, terminales, Edge, Explorador, energia y PowerShell'
+    Descripcion   = 'Menu, terminales, Edge, Explorador, energia, PowerShell y escritorio remoto'
     Orden         = 10
     DependeDe     = @()
     ArchivoConfig = $null

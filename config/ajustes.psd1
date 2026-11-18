@@ -91,6 +91,16 @@
         DobleClicEjecuta   = $true                 # doble clic en .ps1 lo ejecuta (Editar sigue en el clic derecho)
     }
 
+    # 07 - Escritorio remoto (solo Windows Pro/Enterprise/Education; Home no puede recibir conexiones).
+    # Los administradores pueden conectarse; el resto necesita el grupo "Usuarios de escritorio remoto"
+    # (config\usuarios.psd1).
+    EscritorioRemoto = @{
+        Activo   = $true
+        Permitir = $true                           # aceptar conexiones de Escritorio remoto
+        NLA      = $true                           # exigir autenticacion a nivel de red (recomendado)
+        Firewall = $true                           # activar las reglas "Escritorio remoto" del Firewall
+    }
+
     # Modulo Menus (se ejecuta despues de Paquetes): menus contextuales que winget no anade.
     # Solo se anade el de los programas que esten instalados.
     Menus = @{
@@ -99,5 +109,6 @@
         VSCode     = $true                         # "Abrir con Code" en archivos y carpetas
         Everything = $true                         # "Buscar con Everything..." en carpetas
         WinMerge   = $true                         # extension del Explorador de WinMerge (comparar archivos/carpetas)
+        Sourcetree = $true                         # "Abrir en Sourcetree" en carpetas (abre el repositorio)
     }
 }

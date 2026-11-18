@@ -13,13 +13,13 @@ Primera versión. Sustituye a OptimizarHP (v1), que queda solo como referencia.
 - **Continuar tras reiniciar**: si un módulo lo necesita (Características), Aplicar se detiene, programa la continuación y sigue sola al iniciar sesión. `ContinuarTrasReinicio` en `perfil.psd1` y `-SinReiniciar`.
 
 ### Módulos
-- **Ajustes**: 01 menú contextual clásico, 02 terminales (incluye `.bat`), 03 Edge (con opción de directivas **recomendadas**), 04 Explorador, 05 energía, 06 PowerShell (`RemoteSigned`, NuGet + PSGallery de confianza, TLS 1.2 en .NET, doble clic en `.ps1` ejecuta). Los ajustes de usuario se aplican a **todos los perfiles** y al perfil **Default**.
+- **Ajustes**: 01 menú contextual clásico, 02 terminales (incluye `.bat`), 03 Edge (con opción de directivas **recomendadas**), 04 Explorador, 05 energía, 06 PowerShell (`RemoteSigned`, NuGet + PSGallery de confianza, TLS 1.2 en .NET, doble clic en `.ps1` ejecuta), 07 Escritorio remoto (permitir conexiones, NLA y reglas del Firewall; avisa en Windows Home). Los ajustes de usuario se aplican a **todos los perfiles** y al perfil **Default**.
 - **Usuarios**: cuentas locales con sus grupos; las contraseñas `'CAMBIAR'` se piden por pantalla. Las cuentas Microsoft quedan como pendientes.
 - **Carpetas**: Descargas, Documentos, Música… de cada usuario que no están en su sitio por defecto (p. ej. en `D:`); se vuelven a apuntar ahí sin mover archivos.
 - **Compartidas**: recursos compartidos y permisos NTFS.
 - **Características**: activa las características de Windows que falten (Hyper-V, WSL, Sandbox, .NET 3.5…). Nunca desactiva ninguna.
 - **Paquetes**: winget, npm, pip, dotnet tool y módulos PowerShell. winget instala para todos los usuarios (`--scope machine`) si el paquete lo permite; si no, para el usuario y avisa. Extraer lista lo instalado solo para un usuario y sugiere comentado el equivalente en winget de lo instalado con Chocolatey o Scoop. Si se instala Git y `git flow` no funciona (Git for Windows ya no lo incluye desde la 2.51.1), instala git-flow-next (`GitTower.GitFlowNext`) y lo comprueba.
-- **Menus**: menús contextuales que winget no añade, solo si el programa está instalado: «Abrir en Claude» (Claude Code), «Abrir con Code», «Buscar con Everything...» y la extensión de WinMerge.
+- **Menus**: menús contextuales que winget no añade, solo si el programa está instalado: «Abrir en Claude» (Claude Code), «Abrir con Code», «Buscar con Everything...», la extensión de WinMerge y «Abrir en Sourcetree».
 - **Office**: instala Microsoft 365 / Office en silencio con la Office Deployment Tool oficial (`setup.exe` verificado por firma). La activación queda como pendiente manual. Paquetes no instala `Microsoft.Office` con winget si este módulo se encarga.
 - **UniGetUI**: su configuración, en todos los perfiles y Default.
 - **Steam**: imágenes, juegos no-Steam, colecciones y opciones de lanzamiento, con respaldos `*.wmud.bak`.

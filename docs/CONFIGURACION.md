@@ -109,6 +109,16 @@ No se extrae: lo defines tú. Cada sección tiene `Activo` y sus opciones. Los a
 | `Tls12` | .NET Framework usa siempre TLS 1.2+ (evita errores de descarga en PowerShell 5.1). |
 | `DobleClicEjecuta` | Doble clic en un `.ps1` lo ejecuta con PowerShell (antes abría el Bloc de notas). *Editar* sigue en el clic derecho. |
 
+### Sección `EscritorioRemoto` (07)
+
+Solo Windows Pro, Enterprise o Education (Home no puede recibir conexiones). Los usuarios que no sean administradores necesitan el grupo *Usuarios de escritorio remoto* en `usuarios.psd1`.
+
+| Campo | Descripción |
+|---|---|
+| `Permitir` | Acepta conexiones de Escritorio remoto a este equipo. |
+| `NLA` | Exige autenticación a nivel de red (recomendado). |
+| `Firewall` | Activa las reglas del Firewall de Windows del grupo *Escritorio remoto*. |
+
 ### Sección `Menus` (módulo Menus)
 
 La usa el módulo **Menus**, que se ejecuta después de Paquetes. Cada menú se añade solo si el programa está instalado.
@@ -120,6 +130,7 @@ La usa el módulo **Menus**, que se ejecuta después de Paquetes. Cada menú se 
 | `VSCode` | «Abrir con Code» en archivos y carpetas. |
 | `Everything` | «Buscar con Everything...» en carpetas. |
 | `WinMerge` | Extensión del Explorador de WinMerge (comparar archivos y carpetas). |
+| `Sourcetree` | «Abrir en Sourcetree» en carpetas: abre el repositorio en Sourcetree. |
 
 ---
 

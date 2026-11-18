@@ -4,13 +4,14 @@
 #   VSCode     -> "Abrir con Code" en archivos, carpetas y fondo de carpeta (como el instalador)
 #   Everything -> "Buscar con Everything..." en carpetas y fondo de carpeta
 #   WinMerge   -> registra su extension del Explorador (Comparar)
+#   Sourcetree -> "Abrir en Sourcetree" en carpetas y fondo de carpeta (SourceTree.exe -f <carpeta>)
 # Solo anade el menu si el programa esta instalado. Va despues de Paquetes.
 # No tiene Extraer: se activa en config\ajustes.psd1, seccion Menus.
 # Programa instalado para todos -> HKLM; instalado solo para el usuario -> HKCU de ese usuario.
 
 @{
     Nombre        = 'Menus'
-    Descripcion   = 'Menus contextuales de Claude, VS Code, Everything y WinMerge'
+    Descripcion   = 'Menus contextuales de Claude, VS Code, Everything, WinMerge y Sourcetree'
     Orden         = 46
     DependeDe     = @('Paquetes')
     ArchivoConfig = $null
@@ -55,9 +56,13 @@
             $ruta = "$Raiz\$Clase\shell\$Clave"
             # Una entrada de HKCU con el mismo nombre tapa a la de HKLM: si apunta a otro sitio, se corrige
             $hkcu = "HKCU:\Software\Classes\$Clase\shell\$Clave"
-            $cmdU = $null
-            if ($Raiz -like 'HKLM:*') { $cmdU = [string](Get-ItemProperty -LiteralPath "$hkcu\command" -ErrorAction SilentlyContinue).'(default)' }
-            $tapada = $cmdU -and $cmdU -ne $Comando
+            # (tambien si en HKCU quedo la clave sin comando, p. ej. restos de una instalacion anterior)
+            $tapada = $false
+            if ($Raiz -like 'HKLM:*' -and (Test-Path -LiteralPath $hkcu)) {
+                $cmdU = [string](Get-ItemProperty -LiteralPath "$hkcu\command" -ErrorAction SilentlyContinue).'(default)'
+                $txtU = [string](Get-ItemProperty -LiteralPath $hkcu -ErrorAction SilentlyContinue).'(default)'
+                $tapada = ($cmdU -ne $Comando) -or ($txtU -ne $Texto)
+            }
             $igual = (Test-RegValorIgual $ruta '(Default)' $Texto 'String') -and
                      (Test-RegValorIgual "$ruta\command" '(Default)' $Comando 'String') -and
                      (-not $Icono -or (Test-RegValorIgual $ruta 'Icon' $Icono 'String'))
@@ -66,7 +71,8 @@
                   (Set-RegValor -Ruta "$ruta\command" -Nombre '(Default)' -Valor $Comando -Tipo String)
             if ($ok -and $Icono) { $ok = Set-RegValor -Ruta $ruta -Nombre 'Icon' -Valor $Icono -Tipo String }
             if ($ok -and $tapada) {
-                $ok = Set-RegValor -Ruta "$hkcu\command" -Nombre '(Default)' -Valor $Comando -Tipo String
+                $ok = (Set-RegValor -Ruta $hkcu -Nombre '(Default)' -Valor $Texto -Tipo String) -and
+                      (Set-RegValor -Ruta "$hkcu\command" -Nombre '(Default)' -Valor $Comando -Tipo String)
                 if ($ok -and $Icono) { $ok = Set-RegValor -Ruta $hkcu -Nombre 'Icon' -Valor $Icono -Tipo String }
             }
             if ($ok -and -not (Test-Simulacion)) { Write-Ok "$Texto en $Clase" }
@@ -155,6 +161,19 @@
                 }
             }
         } else { Write-Omitido 'WinMerge desactivado (Menus.WinMerge)' }
+
+        # ---------- Sourcetree ----------
+        if ($cfg.Sourcetree) {
+            $exe = Find-Exe @('%ProgramFiles(x86)%\Atlassian\Sourcetree Enterprise\SourceTree.exe', '%ProgramFiles%\Atlassian\Sourcetree Enterprise\SourceTree.exe',
+                              '%ProgramFiles(x86)%\Atlassian\Sourcetree\SourceTree.exe', '%LOCALAPPDATA%\SourceTree\SourceTree.exe')
+            if (-not $exe) { Write-Omitido 'Sourcetree no esta instalado (Atlassian.Sourcetree)' }
+            else {
+                $raiz = Get-RaizClases $exe
+                $icono = "`"$exe`",0"
+                Set-Verbo $raiz 'Directory' 'Sourcetree' 'Abrir en Sourcetree' "`"$exe`" -f `"%V`"" $icono $exe
+                Set-Verbo $raiz 'Directory\Background' 'Sourcetree' 'Abrir en Sourcetree' "`"$exe`" -f `"%V`"" $icono $exe
+            }
+        } else { Write-Omitido 'Sourcetree desactivado (Menus.Sourcetree)' }
 
         Write-Info 'Con el menu clasico (ajuste 01) se ven directamente; si no, en "Mostrar mas opciones".'
     }
