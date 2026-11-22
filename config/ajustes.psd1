@@ -58,6 +58,7 @@
         DeshabilitarWidgets        = $true         # directiva de equipo: el panel no arranca
         SegundosEnReloj            = $true
         OcultarBusquedaBarra       = $true
+        FinalizarTareaEnBarra      = $true         # "Finalizar tarea" al hacer clic derecho en la barra
         OcultarSpotlightEscritorio = $true         # icono "Descubre mas sobre esta imagen"
         QuitarRecomendadosInicio   = $true
         OcultarOneDriveNavegacion  = $true
@@ -101,6 +102,12 @@
         Firewall = $true                           # activar las reglas "Escritorio remoto" del Firewall
     }
 
+    # 08 - Rutas largas (mas de 260 caracteres) en Windows (LongPathsEnabled). Git usa core.longpaths
+    # (modulo Paquetes, Winget.GitConfig).
+    RutasLargas = @{
+        Activo = $true
+    }
+
     # Modulo Menus (se ejecuta despues de Paquetes): menus contextuales que winget no anade.
     # Solo se anade el de los programas que esten instalados.
     Menus = @{
@@ -110,5 +117,9 @@
         Everything = $true                         # "Buscar con Everything..." en carpetas
         WinMerge   = $true                         # extension del Explorador de WinMerge (comparar archivos/carpetas)
         Sourcetree = $true                         # "Abrir en Sourcetree" en carpetas (abre el repositorio)
+        # Ocultar menus (sin borrarlos; se hace despues de instalar Git y Windows Terminal):
+        QuitarAbrirTerminal = $true                # "Abrir en Terminal" (Windows Terminal)
+        QuitarGitGui        = $true                # "Open Git GUI here"
+        QuitarGitBash       = $true                # "Open Git Bash here"
     }
 }

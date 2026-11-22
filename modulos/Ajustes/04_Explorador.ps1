@@ -32,6 +32,9 @@
             if ($Cfg.IconosCentrados)      { $null = Set-RegValor -Ruta $adv -Nombre 'TaskbarAl' -Valor 1 -FalloComoAviso }
             if ($Cfg.OcultarBotonWidgets)  { $null = Set-RegValor -Ruta $adv -Nombre 'TaskbarDa' -Valor 0 -FalloComoAviso }
             if ($Cfg.OcultarBotonChat)     { $null = Set-RegValor -Ruta $adv -Nombre 'TaskbarMn' -Valor 0 -FalloComoAviso }
+            if ($Cfg.FinalizarTareaEnBarra) {
+                $null = Set-RegValor -Ruta "$adv\TaskbarDeveloperSettings" -Nombre 'TaskbarEndTask' -Valor 1 -FalloComoAviso
+            }
             if ($Cfg.OcultarBusquedaBarra) {
                 $null = Set-RegValor -Ruta "$($P.HKCU)\Software\Microsoft\Windows\CurrentVersion\Search" -Nombre 'SearchboxTaskbarMode' -Valor 0 -FalloComoAviso
             }

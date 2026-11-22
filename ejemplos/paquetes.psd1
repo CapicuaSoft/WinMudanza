@@ -9,6 +9,7 @@
     Winget = @{
         Activo = $true
         GitFlow = $true        # si se instala Git y 'git flow' no funciona, instala git-flow-next
+        GitConfig = $true      # si se instala Git: core.autocrlf false y core.longpaths true (--system)
         Paquetes = @(
             '7zip.7zip'
             'Git.Git'

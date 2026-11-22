@@ -149,9 +149,10 @@
         # Marcador que se sustituye por las sugerencias comentadas (Write-Psd1 no escribe comentarios)
         $marca = 'WMUD_SUGERIDOS'
         $listaWinget = @($winget)
+        $conGit = @($winget | Where-Object { $_ -in 'Git.Git', 'Microsoft.Git' }).Count -gt 0
         if ($sugeridos.Count -gt 0) { $listaWinget += $marca }
         $datos = [ordered]@{
-            Winget     = [ordered]@{ Activo = $true; GitFlow = (@($winget | Where-Object { $_ -in 'Git.Git', 'Microsoft.Git' }).Count -gt 0); Paquetes = $listaWinget }
+            Winget     = [ordered]@{ Activo = $true; GitFlow = $conGit; GitConfig = $conGit; Paquetes = $listaWinget }
             Npm        = [ordered]@{ Activo = $true; Paquetes = $npm }
             Pip        = [ordered]@{ Activo = $true; Paquetes = $pip }
             DotnetTool = [ordered]@{ Activo = $true; Paquetes = $dotnet }
@@ -168,6 +169,8 @@
             'Al final de Winget pueden ir comentados equivalentes de lo instalado con Chocolatey o Scoop.'
             'Winget.GitFlow = $true: si se instala Git y "git flow" no funciona, instala git-flow-next'
             '  (GitTower.GitFlowNext); Git for Windows ya no incluye git-flow desde la 2.51.1.'
+            'Winget.GitConfig = $true: si se instala Git, git config --system core.autocrlf false'
+            '  (no cambia los saltos de linea) y core.longpaths true (rutas largas).'
             'Orden al aplicar: Winget -> Npm -> Pip -> DotnetTool -> PowerShell'
             '(winget instala Node, Python o .NET si estan en su lista, y luego se usan).'
         )
@@ -261,6 +264,24 @@
                 Update-RutaEntorno
                 if (-not (Test-Simulacion) -and -not (Test-GitFlow)) {
                     Write-Aviso "git-flow: instalado, pero 'git flow' no responde. Abre una consola nueva y prueba 'git flow version'."
+                }
+            }
+
+            # Configuracion de Git para todos los usuarios (--system, donde el instalador pone autocrlf=true):
+            # no convertir saltos de linea y admitir rutas largas. Un valor en el .gitconfig del usuario manda.
+            if ($cfg.Winget.GitConfig -eq $false) { Write-Omitido 'Configuracion de Git desactivada (Winget.GitConfig)' }
+            elseif (-not $conGit) { }
+            elseif (-not (Test-Comando 'git')) {
+                if (Test-Simulacion) { Write-Simulado 'git config --system core.autocrlf false y core.longpaths true' }
+                else { Write-Aviso 'Configuracion de Git: Git no quedo instalado' }
+            } else {
+                foreach ($o in @(@{ N = 'core.autocrlf'; V = 'false' }, @{ N = 'core.longpaths'; V = 'true' })) {
+                    $actual = "$(& git config --system --get $o.N 2>$null)"
+                    if ($actual.Trim() -eq $o.V) { Write-Omitido "Git: $($o.N) ya es $($o.V)"; continue }
+                    $null = Invoke-Cambio "Git: $($o.N) = $($o.V) (--system)" {
+                        $out = & git config --system $o.N $o.V 2>&1
+                        if ($LASTEXITCODE -ne 0) { throw (($out | ForEach-Object { [string]$_ }) -join ' ') }
+                    }
                 }
             }
         }

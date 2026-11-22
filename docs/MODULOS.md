@@ -18,10 +18,11 @@ Todos los módulos son **repetibles**: lo que ya está aplicado se salta, así q
 | 01 Menú clásico | Usuario (todos los perfiles) | `HKCU\Software\Classes\CLSID\{86ca1aa0-…}\InprocServer32` |
 | 02 Terminales | Equipo | Verbos en `HKLM\SOFTWARE\Classes\Directory\shell`, `Directory\Background\shell`, `.ps1`, `cmdfile`, `batfile` |
 | 03 Edge | Equipo | Directivas en `HKLM\SOFTWARE\Policies\Microsoft\Edge` (o `\Recommended`) |
-| 04 Explorador | Usuario + equipo | `Explorer\Advanced`, `CabinetState`, `Search`, directivas `Dsh`, `CloudContent`, `Explorer`; anclados con Shell COM |
+| 04 Explorador | Usuario + equipo | `Explorer\Advanced` (y `TaskbarDeveloperSettings`), `CabinetState`, `Search`, directivas `Dsh`, `CloudContent`, `Explorer`; anclados con Shell COM |
 | 05 Energía | Equipo + usuario | `powercfg`, `PowerThrottling`, `VisualEffects`, `GameBar`, `GameConfigStore` |
 | 06 PowerShell | Equipo (galería: usuario que ejecuta) | Directiva de ejecución (`ShellIds\Microsoft.PowerShell`, y PowerShell 7 si está), NuGet + PSGallery de confianza, TLS 1.2 en .NET (`SchUseStrongCrypto`, `SystemDefaultTlsVersions`), doble clic en `.ps1` (`Microsoft.PowerShellScript.1\Shell`) |
 | 07 Escritorio remoto | Equipo | Permite conexiones (`Terminal Server\fDenyTSConnections = 0`), exige NLA (`WinStations\RDP-Tcp\UserAuthentication = 1`), activa las reglas del Firewall del grupo Escritorio remoto (por su recurso: vale en cualquier idioma) y, si `TermService` está deshabilitado, lo pone en Manual |
+| 08 Rutas largas | Equipo | `FileSystem\LongPathsEnabled = 1`: rutas de más de 260 caracteres en los programas que lo admiten (npm, pip, PowerShell 7, .NET…). El Explorador sigue limitado. Git usa `core.longpaths` (Paquetes) |
 
 **Cómo llega a todos los usuarios:**
 - Perfiles con sesión abierta: se escribe en su registro cargado.
@@ -160,6 +161,14 @@ Módulo `Caracteristicas`: las de *Activar o desactivar las características de 
 
 **git-flow:** Git for Windows dejó de incluir git-flow en la versión 2.51.1 (el proyecto original está abandonado). Si en la lista está Git y `git flow` no funciona, después de winget se instala **git-flow-next** (`GitTower.GitFlowNext`), el sustituto que recomienda Git for Windows: un `git-flow.exe` nativo, compatible con los repositorios y la configuración `gitflow.*` de git-flow y git-flow-avh. Git solo reconoce `git flow` si encuentra en el PATH un archivo llamado exactamente `git-flow.exe`; winget lo deja así en `C:\Program Files\WinGet\Links`. Después se comprueba con `git flow version`. Se desactiva con `Winget.GitFlow = $false`.
 
+**Configuración de Git:** si en la lista está Git, después de instalarlo se pone, para todos los usuarios (`git config --system`, en `C:\Program Files\Git\etc\gitconfig`, donde el instalador deja `core.autocrlf = true`):
+- `core.autocrlf = false`: Git no cambia los saltos de línea al descargar ni al guardar; los archivos quedan como están en el repositorio.
+- `core.longpaths = true`: admite rutas de más de 260 caracteres.
+
+Si el `.gitconfig` de un usuario (copiado por Desarrollo) tiene su propio valor, ese manda. Se desactiva con `Winget.GitConfig = $false`.
+
+> **Repositorios ya clonados con `autocrlf = true`:** sus archivos tienen CRLF en la copia de trabajo y LF en el repositorio. Con `autocrlf = false`, Git los dará por modificados cuando cambie su fecha, aunque solo difiera el salto de línea. Con el repositorio sin cambios pendientes, `git rm --cached -r -q . && git reset --hard` los vuelve a descargar como están en el repositorio.
+
 **Chocolatey y Scoop:** winget ya reconoce muchos programas instalados con ellos (por el registro de programas instalados) y esos entran en la lista normal. Para el resto, Extraer busca el equivalente en winget por nombre y lo escribe **comentado** al final de la lista de winget, con el paquete de origen:
 
 ```powershell
@@ -214,6 +223,15 @@ Módulo `Caracteristicas`: las de *Activar o desactivar las características de 
 - Si ya hay otra entrada que abre ese programa (por ejemplo, la que crea el instalador de Everything), no se duplica.
 - Si el usuario tiene una entrada antigua con el mismo nombre que apunta a otra ruta (por ejemplo, un VS Code desinstalado) o que quedó a medias (sin comando), se corrige.
 
+También **oculta** (sin borrar nada) los menús que se elijan. Se hace aquí, después de Paquetes, porque instalar o actualizar Git o Windows Terminal los vuelve a crear:
+
+| Menú | Cómo se oculta |
+|---|---|
+| **Abrir en Terminal** (`QuitarAbrirTerminal`) | Bloquea la extensión del Explorador de Windows Terminal: valor `{9F156763-7844-4DC4-B2B1-901F640F5155}` en `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked` (todos los usuarios) |
+| **Open Git GUI here** (`QuitarGitGui`), **Open Git Bash here** (`QuitarGitBash`) | Valor `LegacyDisable` en los verbos `git_gui` y `git_shell` de `Directory`, `Directory\Background`, `Drive` y `LibraryFolder\background`, en `HKLM` (Git para todos) y en las clases de cada perfil (Git por usuario) |
+
+Para volver a mostrarlos, borra ese valor. Si una actualización de Git los vuelve a crear, ejecuta `-Solo Menus`.
+
 **Depende de:** Paquetes.
 
 **Limitaciones:**
@@ -259,11 +277,14 @@ No extrae: historial de operaciones, cachés, telemetría, tamaño de ventana ni
 
 **Aplica:** escribe esa configuración en **todos los perfiles** de usuario y en Default.
 
+**Iniciar como administrador:** UniGetUI arranca al iniciar sesión con una entrada `Run` (`WingetUI`), sin elevar. Para que arranque siempre como administrador sin la ventana de UAC, se usa una **tarea programada** en `\Personal\` con disparador «al iniciar sesión», «ejecutar con los privilegios más altos» y acción `"C:\Program Files\UniGetUI\UniGetUI.exe" --daemon`. La tarea la traslada el módulo **Tareas**. Si Extraer encuentra una tarea que ejecuta `UniGetUI.exe`, pone `QuitarInicioAutomatico = $true`, y Aplicar quita la entrada `Run` de UniGetUI en el equipo y en todos los perfiles (la crean UniGetUI y su instalador), para que no arranque dos veces. Si ninguna tarea lo inicia (ni en el equipo ni en `config\tareas\`), avisa.
+
 **Depende de:** Paquetes (UniGetUI suele instalarse con winget).
 
 **Limitaciones:**
 - UniGetUI debe estar **cerrado** (también en la bandeja del sistema).
 - Las opciones se añaden; no se desactivan opciones que ya estén activas en destino (salvo los gestores, que se escriben completos).
+- Si se vuelve a activar «Iniciar UniGetUI al arrancar» en su configuración, se vuelve a crear la entrada `Run`: déjalo desactivado si lo inicia la tarea.
 
 ---
 

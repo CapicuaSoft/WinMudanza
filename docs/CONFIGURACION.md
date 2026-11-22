@@ -85,6 +85,7 @@ No se extrae: lo defines tú. Cada sección tiene `Activo` y sus opciones. Los a
 | `Explorador` | `MostrarOcultos`, `MostrarExtensiones`, `MostrarArchivosSistema` | Visibilidad de archivos. |
 | | `AbrirEnEsteEquipo`, `VistaCompacta`, `RutaCompletaEnTitulo` | Comportamiento del Explorador. |
 | | `IconosCentrados`, `OcultarBotonWidgets`, `OcultarBotonChat`, `OcultarBusquedaBarra`, `SegundosEnReloj` | Barra de tareas. |
+| | `FinalizarTareaEnBarra` | Añade «Finalizar tarea» al menú contextual de los programas en la barra de tareas. |
 | | `DeshabilitarWidgets` | Directiva de equipo: el panel de Widgets no arranca. |
 | | `OcultarSpotlightEscritorio` | Quita el icono "Descubre más sobre esta imagen". |
 | | `QuitarRecomendadosInicio` | Quita "Recomendados" del menú Inicio. |
@@ -119,6 +120,12 @@ Solo Windows Pro, Enterprise o Education (Home no puede recibir conexiones). Los
 | `NLA` | Exige autenticación a nivel de red (recomendado). |
 | `Firewall` | Activa las reglas del Firewall de Windows del grupo *Escritorio remoto*. |
 
+### Sección `RutasLargas` (08)
+
+| Campo | Descripción |
+|---|---|
+| `Activo` | Permite rutas de más de 260 caracteres en Windows (`LongPathsEnabled = 1`), para todos los usuarios. Git usa su propia opción (`Winget.GitConfig` en `paquetes.psd1`). |
+
 ### Sección `Menus` (módulo Menus)
 
 La usa el módulo **Menus**, que se ejecuta después de Paquetes. Cada menú se añade solo si el programa está instalado.
@@ -131,6 +138,8 @@ La usa el módulo **Menus**, que se ejecuta después de Paquetes. Cada menú se 
 | `Everything` | «Buscar con Everything...» en carpetas. |
 | `WinMerge` | Extensión del Explorador de WinMerge (comparar archivos y carpetas). |
 | `Sourcetree` | «Abrir en Sourcetree» en carpetas: abre el repositorio en Sourcetree. |
+| `QuitarAbrirTerminal` | Oculta «Abrir en Terminal» (Windows Terminal) para todos los usuarios. |
+| `QuitarGitGui`, `QuitarGitBash` | Ocultan «Open Git GUI here» y «Open Git Bash here». |
 
 ---
 
@@ -359,7 +368,7 @@ Se añaden las que falten; quitar una de la lista **no** la borra del equipo.
 ## `config\paquetes.psd1`
 
 ```powershell
-Winget     = @{ Activo = $true; GitFlow = $true; Paquetes = @( 'Git.Git' ... ) }
+Winget     = @{ Activo = $true; GitFlow = $true; GitConfig = $true; Paquetes = @( 'Git.Git' ... ) }
 Npm        = @{ Activo = $true; Paquetes = @( ... ) }
 Pip        = @{ Activo = $true; Paquetes = @( ... ) }
 DotnetTool = @{ Activo = $true; Paquetes = @( ... ) }
@@ -371,6 +380,7 @@ PowerShell = @{ Activo = $true; Paquetes = @( ... ) }
 - Los identificadores de winget son los de `winget search` (columna *Id*).
 - Se instala siempre la última versión, para todos los usuarios si el paquete lo permite.
 - `Winget.GitFlow = $true`: si en la lista está Git (`Git.Git` o `Microsoft.Git`) y `git flow` no funciona, instala git-flow-next (`GitTower.GitFlowNext`). Extraer lo pone a `$true` cuando Git está en la lista; `$false` lo desactiva.
+- `Winget.GitConfig = $true`: si en la lista está Git, después de instalarlo pone `git config --system core.autocrlf false` (no cambia los saltos de línea de los archivos) y `core.longpaths true` (rutas largas). Extraer lo pone a `$true` cuando Git está en la lista; `$false` lo desactiva.
 - Al final de `Winget` pueden aparecer **comentados** los equivalentes de lo instalado con Chocolatey o Scoop: quita el `#` de los que quieras instalar.
 
 `paquetes_no_reinstalables.txt` es solo informativo.
@@ -443,6 +453,7 @@ Equivale al `configuration.xml` de la Office Deployment Tool; el módulo lo gene
 | `OpcionesActivadas` | Opciones marcadas de UniGetUI (cada una es un archivo vacío en su configuración). |
 | `ArchivosDeValor` | Opciones con valor; se copian desde `config\unigetui\Configuration\`. |
 | `OpcionesInstalacion` | `$true` copia las opciones de instalación por paquete (`config\unigetui\InstallationOptions\`). |
+| `QuitarInicioAutomatico` | `$true` quita el inicio automático de UniGetUI (entrada `Run`, en el equipo y en todos los perfiles) porque lo inicia una tarea programada, por ejemplo como administrador. Extraer lo pone a `$true` si hay una tarea que ejecuta `UniGetUI.exe`. |
 
 ---
 

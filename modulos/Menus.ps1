@@ -5,13 +5,14 @@
 #   Everything -> "Buscar con Everything..." en carpetas y fondo de carpeta
 #   WinMerge   -> registra su extension del Explorador (Comparar)
 #   Sourcetree -> "Abrir en Sourcetree" en carpetas y fondo de carpeta (SourceTree.exe -f <carpeta>)
-# Solo anade el menu si el programa esta instalado. Va despues de Paquetes.
+# Y oculta (sin borrar) los que se elijan: "Abrir en Terminal", "Open Git GUI here", "Open Git Bash here".
+# Solo anade el menu si el programa esta instalado. Va despues de Paquetes (Git y Terminal ya instalados).
 # No tiene Extraer: se activa en config\ajustes.psd1, seccion Menus.
 # Programa instalado para todos -> HKLM; instalado solo para el usuario -> HKCU de ese usuario.
 
 @{
     Nombre        = 'Menus'
-    Descripcion   = 'Menus contextuales de Claude, VS Code, Everything, WinMerge y Sourcetree'
+    Descripcion   = 'Menus contextuales de Claude, VS Code, Everything, WinMerge y Sourcetree; quita Terminal y Git'
     Orden         = 46
     DependeDe     = @('Paquetes')
     ArchivoConfig = $null
@@ -174,6 +175,50 @@
                 Set-Verbo $raiz 'Directory\Background' 'Sourcetree' 'Abrir en Sourcetree' "`"$exe`" -f `"%V`"" $icono $exe
             }
         } else { Write-Omitido 'Sourcetree desactivado (Menus.Sourcetree)' }
+
+        # ---------- Quitar menus ----------
+        # Se ocultan sin borrar claves (reversible). Va aqui, despues de Paquetes, porque instalar
+        # o actualizar Git o Windows Terminal los vuelve a crear.
+
+        # "Abrir en Terminal": extension del Explorador de Windows Terminal, se bloquea por CLSID (todos los usuarios)
+        if ($cfg.QuitarAbrirTerminal) {
+            $clsidWT = '{9F156763-7844-4DC4-B2B1-901F640F5155}'
+            $bloq = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked'
+            if (Test-RegValorIgual $bloq $clsidWT '' 'String') { Write-Omitido '"Abrir en Terminal" ya oculto' }
+            elseif (Set-RegValor -Ruta $bloq -Nombre $clsidWT -Valor '' -Tipo String) {
+                if (-not (Test-Simulacion)) { Write-Ok '"Abrir en Terminal" oculto' }
+            }
+        }
+
+        # "Open Git GUI here" (git_gui) y "Open Git Bash here" (git_shell): LegacyDisable en cada verbo que exista.
+        # Git para todos -> HKLM; Git por usuario -> Classes de cada perfil.
+        $verbosGit = @()
+        if ($cfg.QuitarGitGui)  { $verbosGit += @{ Clave = 'git_gui';   Texto = 'Open Git GUI here' } }
+        if ($cfg.QuitarGitBash) { $verbosGit += @{ Clave = 'git_shell'; Texto = 'Open Git Bash here' } }
+        if ($verbosGit.Count -gt 0) {
+            $hay = @{}
+            function Hide-VerbosGit([string]$Raiz, [string]$Donde) {
+                foreach ($v in $verbosGit) {
+                    foreach ($clase in 'Directory', 'Directory\Background', 'Drive', 'LibraryFolder\background') {
+                        $ruta = "$Raiz\$clase\shell\$($v.Clave)"
+                        if (-not (Test-Path -LiteralPath $ruta)) { continue }
+                        $hay[$v.Clave] = $true
+                        if (Test-RegValorIgual $ruta 'LegacyDisable' '' 'String') { Write-Omitido "$($v.Texto) en $clase ($Donde) ya oculto"; continue }
+                        if (Set-RegValor -Ruta $ruta -Nombre 'LegacyDisable' -Valor '' -Tipo String) {
+                            if (-not (Test-Simulacion)) { Write-Ok "$($v.Texto) oculto en $clase ($Donde)" }
+                        }
+                    }
+                }
+            }
+            Hide-VerbosGit 'HKLM:\SOFTWARE\Classes' 'todos'
+            Invoke-EnPerfiles {
+                param($P)
+                if ($P.Clases) { Hide-VerbosGit $P.Clases $P.Nombre }
+            }
+            foreach ($v in $verbosGit) {
+                if (-not $hay[$v.Clave]) { Write-Omitido "$($v.Texto): no existe (Git no esta instalado)" }
+            }
+        }
 
         Write-Info 'Con el menu clasico (ajuste 01) se ven directamente; si no, en "Mostrar mas opciones".'
     }

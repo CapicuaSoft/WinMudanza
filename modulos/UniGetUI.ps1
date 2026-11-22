@@ -55,11 +55,17 @@
             $numInst = @(Get-ChildItem -LiteralPath $instOpc -File -Recurse).Count
         }
 
+        # Si una tarea programada lanza UniGetUI (p. ej. como administrador al iniciar sesion),
+        # se quitara su inicio automatico normal para que no arranque dos veces
+        $porTarea = @(Get-TareasUniGetUI).Count -gt 0
+        if ($porTarea) { Write-Ok 'UniGetUI se inicia con una tarea programada: se quitara su inicio automatico' }
+
         $datos = [ordered]@{
             Gestores          = $gestores
             OpcionesActivadas = @($opciones | Sort-Object)
             ArchivosDeValor   = @($valores | Sort-Object)
             OpcionesInstalacion = ($numInst -gt 0)
+            QuitarInicioAutomatico = $porTarea
         }
         $ruta = Join-Path $Ctx.DirConfig 'unigetui.psd1'
         Write-Psd1 -Ruta $ruta -Datos $datos -Cabecera @(
@@ -69,6 +75,8 @@
             'OpcionesActivadas  : opciones marcadas (cada una es un archivo vacio). Comenta con # para no aplicarla.'
             'ArchivosDeValor    : opciones con valor; se copian desde config\unigetui\Configuration\.'
             'OpcionesInstalacion: $true copia config\unigetui\InstallationOptions\ (opciones por paquete).'
+            'QuitarInicioAutomatico: $true quita la entrada Run de UniGetUI (todos los perfiles y equipo),'
+            '  porque lo inicia una tarea programada (p. ej. \Personal\, como administrador; modulo Tareas).'
             'Se aplica a todos los perfiles de usuario y al perfil Default. UniGetUI debe estar cerrado.'
         )
         $activos = ($gestores.Keys | Where-Object { $gestores[$_] }) -join ', '
@@ -121,6 +129,40 @@
                     Copy-Item -Path (Join-Path $srcInst '*') -Destination $dInst -Recurse -Force -ErrorAction Stop
                 }
             }
+        }
+
+        # ---------- Inicio automatico ----------
+        # Lo inicia una tarea programada: se quita la entrada Run (WingetUI) que crean UniGetUI y su
+        # instalador, en el equipo y en cada perfil, para que no arranque dos veces (una sin elevar).
+        if ($cfg.QuitarInicioAutomatico) {
+            $enConfig = $false
+            $dirTareas = Join-Path $Ctx.DirConfig 'tareas'
+            if (Test-Path -LiteralPath $dirTareas) {
+                $enConfig = @(Get-ChildItem -LiteralPath $dirTareas -Filter '*.xml' -Recurse |
+                    Where-Object { (Get-Content -LiteralPath $_.FullName -Raw) -match 'UniGetUI\.exe' }).Count -gt 0
+            }
+            if (-not $enConfig -and @(Get-TareasUniGetUI).Count -eq 0) {
+                Write-Aviso 'UniGetUI: ninguna tarea programada lo inicia (ni en config\tareas\); al quitar su inicio automatico no arrancara al iniciar sesion'
+            }
+            $quitar = {
+                param([string]$Run, [string]$Donde)
+                $props = (Get-ItemProperty -LiteralPath $Run -ErrorAction SilentlyContinue).PSObject.Properties |
+                    Where-Object { $_.Name -notlike 'PS*' -and [string]$_.Value -match 'UniGetUI\.exe|WingetUI\.exe' }
+                foreach ($v in @($props)) {
+                    $nombre = $v.Name
+                    $null = Invoke-Cambio "UniGetUI: quitar inicio automatico '$nombre' ($Donde)" {
+                        Remove-ItemProperty -LiteralPath $Run -Name $nombre -ErrorAction Stop
+                    }
+                }
+                return @($props).Count
+            }
+            $cuenta = @{ N = 0 }
+            $cuenta.N += & $quitar 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run' 'equipo'
+            Invoke-EnPerfiles {
+                param($P)
+                $cuenta.N += & $quitar "$($P.HKCU)\Software\Microsoft\Windows\CurrentVersion\Run" $P.Nombre
+            }
+            if ($cuenta.N -eq 0) { Write-Omitido 'UniGetUI: sin inicio automatico (lo inicia la tarea programada)' }
         }
     }
 }
