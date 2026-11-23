@@ -1,6 +1,8 @@
 # WinMudanza
 
+[![Última versión](https://img.shields.io/github/v/release/CapicuaSoft/WinMudanza?label=descargar&color=2E7D32)](https://github.com/CapicuaSoft/WinMudanza/releases/latest)
 [![Licencia](https://img.shields.io/badge/licencia-LGPL--2.1-blue)](LICENSE)
+[![Donar con PayPal](https://img.shields.io/badge/Donar-PayPal-00457C?logo=paypal&logoColor=white)](https://paypal.me/jbautistamartin)
 
 Scripts de PowerShell para **mudarte de un Windows a otro**: dejar a punto un **Windows 11 recién instalado** con la configuración del equipo anterior.
 
@@ -80,7 +82,14 @@ Lo que genera Extraer contiene **secretos en texto plano**: contraseñas de usua
 
 Ayuda desde PowerShell: `Get-Help .\WinMudanza.ps1 -Full`
 
+## Apoyar el proyecto
+
+WinMudanza es gratuito. Si te resulta útil y quieres apoyar su desarrollo, puedes
+[invitarme a un café](https://paypal.me/jbautistamartin). Es completamente opcional. También está
+en la opción **9) Acerca de** del menú (o `.\WinMudanza.ps1 -Accion AcercaDe`).
+
 ## Licencia
 
-Distribuido bajo la licencia **GNU Lesser General Public License v2.1**.  
+© 2026 José Luis Bautista Martín · [CapicuaSoft](https://github.com/CapicuaSoft).
+Distribuido bajo la licencia **GNU Lesser General Public License v2.1**.
 Consulta el archivo [LICENSE](LICENSE) para más detalles.

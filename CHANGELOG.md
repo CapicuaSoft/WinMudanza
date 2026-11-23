@@ -1,5 +1,15 @@
 # Cambios
 
+## 1.1.0 — 2026-11-23
+
+### Proyecto
+- El repositorio pasa a la organización **CapicuaSoft**: https://github.com/CapicuaSoft/WinMudanza (la dirección anterior redirige aquí).
+- **Acerca de** (opción 9 del menú, o `-Accion AcercaDe`): versión, licencia LGPL 2.1, enlace al proyecto y donativo opcional.
+- README con la última versión para descargar, el donativo y el copyright.
+
+### Módulos
+- **Ajustes 04 Explorador**: `OcultarGaleriaNavegacion` quita Galería del panel lateral del Explorador, y `OcultarOneDriveNavegacion` quita también las cuentas de OneDrive de trabajo o escuela, no solo la personal. Ambos para todos los perfiles.
+
 ## 1.0.0 — 2026-11-22
 
 Primera versión. Sustituye a OptimizarHP (v1), que queda solo como referencia.

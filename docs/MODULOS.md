@@ -27,7 +27,7 @@ Todos los módulos son **repetibles**: lo que ya está aplicado se salta, así q
 **Cómo llega a todos los usuarios:**
 - Perfiles con sesión abierta: se escribe en su registro cargado.
 - Perfiles sin sesión: se carga su `NTUSER.DAT` (y `UsrClass.dat`) temporalmente con `reg load`.
-- Perfil **Default** (plantilla de usuarios nuevos): se escribe en su `NTUSER.DAT`. Las claves de *Classes* (menú clásico, OneDrive) no se heredan de Default, así que se programan con **RunOnce** para el primer inicio de sesión de cada usuario nuevo.
+- Perfil **Default** (plantilla de usuarios nuevos): se escribe en su `NTUSER.DAT`. Las claves de *Classes* (menú clásico, OneDrive y Galería en el panel lateral) no se heredan de Default, así que se programan con **RunOnce** para el primer inicio de sesión de cada usuario nuevo.
 
 **Limitaciones:**
 - Windows 11 24H2+ protege algunas claves de la barra de tareas (`TaskbarDa`, a veces `SearchboxTaskbarMode`). Si falla, se muestra un aviso y se continúa.

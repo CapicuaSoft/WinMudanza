@@ -61,7 +61,8 @@
         FinalizarTareaEnBarra      = $true         # "Finalizar tarea" al hacer clic derecho en la barra
         OcultarSpotlightEscritorio = $true         # icono "Descubre mas sobre esta imagen"
         QuitarRecomendadosInicio   = $true
-        OcultarOneDriveNavegacion  = $true
+        OcultarOneDriveNavegacion  = $true         # panel lateral: OneDrive personal y de trabajo o escuela
+        OcultarGaleriaNavegacion   = $true         # panel lateral: Galeria
         # Solo para el usuario que ejecuta el script (Windows no permite hacerlo en otros perfiles):
         DesanclarCarpetas          = @('Desktop', 'MyPictures', 'MyMusic', 'MyVideos')
         DesanclarGaleria           = $true

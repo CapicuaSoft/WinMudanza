@@ -89,9 +89,10 @@ No se extrae: lo defines tú. Cada sección tiene `Activo` y sus opciones. Los a
 | | `DeshabilitarWidgets` | Directiva de equipo: el panel de Widgets no arranca. |
 | | `OcultarSpotlightEscritorio` | Quita el icono "Descubre más sobre esta imagen". |
 | | `QuitarRecomendadosInicio` | Quita "Recomendados" del menú Inicio. |
-| | `OcultarOneDriveNavegacion` | Quita OneDrive del panel lateral. |
+| | `OcultarOneDriveNavegacion` | Quita OneDrive del panel lateral: la cuenta personal y las de trabajo o escuela («OneDrive - Organización»). Todos los perfiles. |
+| | `OcultarGaleriaNavegacion` | Quita Galería del panel lateral. Todos los perfiles. |
 | | `DesanclarCarpetas` | Lista de carpetas a desanclar de Inicio: `Desktop`, `MyPictures`, `MyMusic`, `MyVideos`, `MyDocuments`… (solo usuario actual). |
-| | `DesanclarGaleria`, `AnclarCarpetaPersonal` | Solo usuario actual. |
+| | `DesanclarGaleria`, `AnclarCarpetaPersonal` | Galería fuera de Inicio (la vista de Acceso rápido) y carpeta personal anclada. Solo usuario actual. |
 | `Energia` | `PlanAltoRendimiento` | Activa Alto Rendimiento (lo crea si el fabricante lo oculta). |
 | | `SinSuspensionUSB`, `DiscoNuncaApagar` | Ajustes del plan. |
 | | `SinPowerThrottling` | No limita la CPU de procesos en segundo plano. |

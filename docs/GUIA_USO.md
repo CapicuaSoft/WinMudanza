@@ -125,7 +125,7 @@ Se puede ejecutar todas las veces que haga falta: lo que ya está aplicado se sa
    5) Aplicar en modo simulacion (no cambia nada)
    6) Comparar configuracion con este equipo
 
-   7) Ver estado de config\      8) Ayuda      0) Salir
+   7) Ver estado de config\   8) Ayuda   9) Acerca de   0) Salir
 ```
 
 Al elegir 1, 4, 5 o 6 se muestra la lista de módulos marcada según `perfil.psd1`. Escribe el número de un módulo para marcarlo o desmarcarlo y pulsa Enter para continuar.
@@ -134,7 +134,7 @@ Al elegir 1, 4, 5 o 6 se muestra la lista de módulos marcada según `perfil.psd
 
 | Parámetro | Descripción |
 |---|---|
-| `-Accion Extraer\|Revisar\|Copiar\|Aplicar\|Comparar\|Estado\|Ayuda` | Acción a ejecutar. Sin ella se abre el menú. |
+| `-Accion Extraer\|Revisar\|Copiar\|Aplicar\|Comparar\|Estado\|Ayuda\|AcercaDe` | Acción a ejecutar. Sin ella se abre el menú. `AcercaDe` muestra la versión, la licencia, el proyecto y el donativo. |
 | `-Solo M1,M2` | Ejecuta solo esos módulos (ignora `perfil.psd1`). |
 | `-Omitir M1,M2` | Quita esos módulos de la ejecución. |
 | `-WhatIf` | Simulación de Aplicar: no cambia nada. |

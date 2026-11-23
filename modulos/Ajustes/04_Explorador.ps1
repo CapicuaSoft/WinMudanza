@@ -38,13 +38,31 @@
             if ($Cfg.OcultarBusquedaBarra) {
                 $null = Set-RegValor -Ruta "$($P.HKCU)\Software\Microsoft\Windows\CurrentVersion\Search" -Nombre 'SearchboxTaskbarMode' -Valor 0 -FalloComoAviso
             }
-            if ($Cfg.OcultarOneDriveNavegacion) {
-                $onedrive = 'CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}'
+            # Ocultar del panel de navegacion: System.IsPinnedToNamespaceTree = 0 en el CLSID del usuario.
+            # Sin las clases del usuario cargadas (UsrClass.dat), se deja para su primer inicio de sesion.
+            $ocultarClsid = {
+                param([string]$Clsid, [string]$RunOnce)
                 if ($P.Clases) {
-                    $ok = (Set-RegValor -Ruta "$($P.Clases)\$onedrive" -Nombre 'System.IsPinnedToNamespaceTree' -Valor 0) -and $ok
-                } else {
-                    $ok = (Set-RunOnce $P.HKCU 'WMUD_OneDrive' "reg.exe add `"HKCU\Software\Classes\$onedrive`" /v System.IsPinnedToNamespaceTree /t REG_DWORD /d 0 /f") -and $ok
+                    return (Set-RegValor -Ruta "$($P.Clases)\CLSID\$Clsid" -Nombre 'System.IsPinnedToNamespaceTree' -Valor 0)
                 }
+                return (Set-RunOnce $P.HKCU $RunOnce "reg.exe add `"HKCU\Software\Classes\CLSID\$Clsid`" /v System.IsPinnedToNamespaceTree /t REG_DWORD /d 0 /f")
+            }
+            if ($Cfg.OcultarOneDriveNavegacion) {
+                # OneDrive personal (CLSID fijo) y cuentas de trabajo o escuela (un CLSID por cuenta,
+                # registrado en el NameSpace del escritorio con el nombre "OneDrive - <organizacion>").
+                $ids = @('{018D5C66-4533-4307-9B53-224DE2ED1FE6}')
+                $ns = "$($P.HKCU)\Software\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace"
+                if (Test-Path $ns) {
+                    $ids += @(Get-ChildItem $ns -ErrorAction SilentlyContinue |
+                        Where-Object { "$($_.GetValue(''))" -match '^OneDrive( - |$)' } | ForEach-Object { $_.PSChildName })
+                }
+                foreach ($id in @($ids | Select-Object -Unique)) {
+                    $nombreRun = if ($id -eq '{018D5C66-4533-4307-9B53-224DE2ED1FE6}') { 'WMUD_OneDrive' } else { "WMUD_OneDrive_$($id.Trim('{}').Substring(0, 8))" }
+                    $ok = (& $ocultarClsid $id $nombreRun) -and $ok
+                }
+            }
+            if ($Cfg.OcultarGaleriaNavegacion) {
+                $ok = (& $ocultarClsid '{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}' 'WMUD_Galeria') -and $ok
             }
             if ($ok -and -not (Test-Simulacion)) { Write-Ok "Explorador y barra de tareas: $($P.Nombre)" }
         }

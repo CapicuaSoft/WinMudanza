@@ -15,6 +15,7 @@
                 activar WSL), programa la continuacion y sigue sola tras reiniciar.
       Comparar  Muestra que diferencias hay entre config\ y este equipo (no cambia nada).
       Estado    Muestra que hay en config\.
+      AcercaDe  Version, licencia, proyecto y donativo.
 
     Que modulos se ejecutan lo decide config\perfil.psd1; -Solo y -Omitir lo sobrescriben.
     Sin parametros se abre un menu interactivo. Facil de arrancar con doble clic en WinMudanza.cmd.
@@ -22,7 +23,7 @@
     Aplicar requiere PowerShell como Administrador (la simulacion y Comparar funcionan sin serlo).
 
 .PARAMETER Accion
-    Extraer, Revisar, Copiar, Aplicar, Comparar, Estado o Ayuda. Si se omite, se abre el menu.
+    Extraer, Revisar, Copiar, Aplicar, Comparar, Estado, Ayuda o AcercaDe. Si se omite, se abre el menu.
 
 .PARAMETER Solo
     Ejecuta solo estos modulos (ignora perfil.psd1). Ej: -Solo Usuarios,Compartidas
@@ -74,10 +75,12 @@
 
 .NOTES
     Documentacion completa en README.md y en la carpeta docs\.
+    (c) 2026 Jose Luis Bautista Martin - CapicuaSoft. Licencia GNU LGPL v2.1 (LICENSE).
+    https://github.com/CapicuaSoft/WinMudanza
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('Extraer', 'Revisar', 'Copiar', 'Aplicar', 'Comparar', 'Estado', 'Ayuda')]
+    [ValidateSet('Extraer', 'Revisar', 'Copiar', 'Aplicar', 'Comparar', 'Estado', 'Ayuda', 'AcercaDe')]
     [string]$Accion,
     [string[]]$Solo,
     [string[]]$Omitir,
@@ -91,7 +94,9 @@ param(
 
 $ErrorActionPreference = 'Continue'
 $Raiz = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Version = '1.0.0'
+$Version = '1.1.0'
+$UrlProyecto = 'https://github.com/CapicuaSoft/WinMudanza'
+$UrlDonativo = 'https://paypal.me/jbautistamartin'
 $TareaContinuar = 'WinMudanza-Continuar'
 
 # Librerias comunes (lib\) y librerias propias de cada modulo (modulos\<Modulo>\*.psm1)
@@ -459,6 +464,33 @@ function Show-Ayuda {
     Write-Host 'Documentacion: README.md y docs\ (GUIA_USO.md, CONFIGURACION.md, MODULOS.md, PROBLEMAS.md)' -ForegroundColor Cyan
 }
 
+function Show-AcercaDe([bool]$Interactivo) {
+    Write-Host ''
+    Write-Host '  ==============================================' -ForegroundColor Cyan
+    Write-Host ("   WinMudanza v{0} - CapicuaSoft" -f $Version) -ForegroundColor Cyan
+    Write-Host '  ==============================================' -ForegroundColor Cyan
+    Write-Host ''
+    Write-Host '   Configura un Windows 11 recien instalado y traslada la configuracion'
+    Write-Host '   de un equipo a otro.'
+    Write-Host ''
+    Write-Host "   Proyecto:  $UrlProyecto"
+    Write-Host "   Licencia:  GNU LGPL v2.1 (archivo LICENSE)  $UrlProyecto/blob/main/LICENSE"
+    Write-Host '   (c) 2026 Jose Luis Bautista Martin - CapicuaSoft'
+    Write-Host ''
+    Write-Host '   WinMudanza es gratuito. Si te resulta util y quieres apoyar su desarrollo,'
+    Write-Host '   puedes invitarme a un cafe. Es completamente opcional.'
+    Write-Host "   Donativo:  $UrlDonativo" -ForegroundColor Yellow
+    if (-not $Interactivo) { return }
+    Write-Host ''
+    $r = Read-Host '  D) Invitar a un cafe   P) Abrir el proyecto   Enter) Volver'
+    $url = $null
+    if ($r -match '^[dD]') { $url = $UrlDonativo }
+    if ($r -match '^[pP]') { $url = $UrlProyecto }
+    if ($url) {
+        try { Start-Process $url } catch { Write-Host "  No se pudo abrir el navegador: $url" -ForegroundColor Yellow }
+    }
+}
+
 # ==================================================
 # MENU INTERACTIVO
 # ==================================================
@@ -494,7 +526,7 @@ function Show-Menu {
     $adminTxt = 'NO admin'
     if (Test-Admin) { $adminTxt = 'admin' }
     $os = (Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue)
-    while ($true) {
+    :menu while ($true) {
         Write-Host ''
         Write-Host '  ==============================================' -ForegroundColor Cyan
         Write-Host ("   WinMudanza v{0}        Equipo: {1}" -f $Version, $env:COMPUTERNAME) -ForegroundColor Cyan
@@ -511,7 +543,7 @@ function Show-Menu {
         Write-Host '   5) Aplicar en modo simulacion (no cambia nada)'
         Write-Host '   6) Comparar configuracion con este equipo'
         Write-Host ''
-        Write-Host '   7) Ver estado de config\      8) Ayuda      0) Salir'
+        Write-Host '   7) Ver estado de config\   8) Ayuda   9) Acerca de   0) Salir'
         Write-Host ''
         $op = Read-Host '  Opcion'
         switch ($op) {
@@ -543,6 +575,7 @@ function Show-Menu {
             }
             '7' { Show-Estado }
             '8' { Show-Ayuda }
+            '9' { Show-AcercaDe $true; continue menu }   # ya pregunta: sin "Pulsa Enter"
             '0' { return }
             default { continue }
         }
@@ -569,6 +602,7 @@ if (-not $Accion) {
 switch ($Accion) {
     'Estado' { Show-Estado; exit 0 }
     'Ayuda'  { Show-Ayuda;  exit 0 }
+    'AcercaDe' { Show-AcercaDe $false; exit 0 }
     'Copiar' { exit (Copy-WinMudanza $Destino) }
 }
 
